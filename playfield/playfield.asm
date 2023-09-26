@@ -51,8 +51,10 @@ set_frame:
     ;disable PF1 and PF2
     ldx #0
     stx PF1
+    ;stx PF2
+    ldx #%10000000
     stx PF2
-    ldx #%00100000
+    ldx #%01100000
     stx PF0 ;set PF0
     repeat 164
         sta WSYNC
