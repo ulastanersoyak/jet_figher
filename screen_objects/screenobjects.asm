@@ -14,6 +14,9 @@ reset:
     sta COLUP0
     lda #$C6 ;player1 colour light green
     sta COLUP1
+    ldy #%00000010 ;CTRLPF(control playfield) D1(second bit from the end) is set 
+                    ;to 1 (meaning the playfield will be treated as scoreboard)
+    sty CTRLPF 
 start_frame:
     lda #2
     sta VBLANK
