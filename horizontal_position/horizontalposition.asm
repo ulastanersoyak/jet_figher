@@ -10,8 +10,8 @@ res:;reset
     CLEAN_START
     ldx #$00 ;black colour
     stx COLUBK
-    lda #50
-    sta p0_x ;p0_x =50
+    lda #40
+    sta p0_x ;p0_x =40
 dk:;draw kernel
     lda #2 ;%00000010
     sta VSYNC
@@ -67,6 +67,14 @@ ovs:
     repeat 30
         sta WSYNC
     repend
+    lda p0_x
+    cmp #80
+    bpl resx
+    jmp incx
+resx:
+    lda #40
+    sta p0_x
+incx:
     inc p0_x
     jmp dk
 ;lookup table for the player graphics bitmap
