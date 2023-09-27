@@ -4,8 +4,8 @@
     seg.u variables
     org $80 ;from $80 to $FF can be used to initialize "variables". since stack starts from $FF and grows towards
             ;the $80 address, variable memory can be smaller.
-p0_h byte ;player sprite height
-p0_y byte ;player sprite y position
+p0_h byte ;player sprite height at mem location -> $80
+p0_y byte ;player sprite y position at mem location -> $81
     seg code
     org $F000
 reset:
