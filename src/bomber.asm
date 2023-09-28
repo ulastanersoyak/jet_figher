@@ -7,10 +7,13 @@ p0x byte ;player0 x pos
 p0y byte ;player0 y pos
 p0s word ;player0 sprite ptr
 p0c word ;player0 colour ptr
+p0ao byte ;p0 animation offset
+p0h = 9;player 0 height = current location -location of p0spr
 p1x byte ;player1 x pos
 p1y byte ;player1 y pos
 p1s word ;player1 sprite ptr
 p1c word ;player1 colour ptr
+p1h = 9
     seg code 
     org $F000
 res:;reset
@@ -82,7 +85,7 @@ vl;visible lines
     sta PF1
     lda #0
     sta PF2
-    ldx #96 ;half of visible lines because of 2-line kernel usage
+    ldx #96 ;half of visible lines because of 2-line kernel usag
 .vll:;visible line loop
 .check_p0;check if p0 is ready to render
     txa ;transfer x to a register
@@ -92,13 +95,14 @@ vl;visible lines
     bcc .dp0 ;if rs < p0h, draw p0
     lda #0 ;else set a register to 0 in order to prepare for next iter
 .dp0;draw player0 sprite
+    clc;clear carry flag before addition
+    adc p0ao
     tay ;transfer a to y
     lda (p0s),Y
     sta WSYNC
     sta GRP0
     lda (p0c),Y
     sta COLUP0
-
 .check_p1;check if p1 is ready to render
     txa ;transfer x to a register
     sec ;set the carry flag for subtraction
@@ -106,6 +110,7 @@ vl;visible lines
     cmp p1h ;check if sprite is in render position
     bcc .dp1 ;if rs < p0h, draw p0
     lda #0 ;else set a register to 0 in order to prepare for next iter
+    sta p0ao
 .dp1;draw player1 sprite
     tay ;transfer a to y
     lda #%00000101
@@ -115,11 +120,11 @@ vl;visible lines
     sta GRP1
     lda (p1c),Y
     sta COLUP1
-
     dex
     bne .vll
-
-;overcan!!
+    lda #0
+    sta p0ao
+;overcan
     lda #2
     sta VBLANK
     ldx #30 ;30 ovescan scanlines
@@ -129,30 +134,47 @@ ovs:
     bne ovs ;jump to ovs if x!=0
     lda #0
     sta VBLANK ;disable blank scanlines
-
     ;process input for p0 (up-down-left-right)
 p0up:;check if p0 is pressed up arrow
     lda #%00010000;p0 up
     bit SWCHA
     bne p0dw
     inc p0y;p0 y pos++
+    lda #0
+    sta p0ao
 p0dw:;p0 down
     lda #%00100000
     bit SWCHA
     bne p0le
     dec p0y;p0 y pos--
+    lda #0
+    sta p0ao
 p0le:;p0 left
     lda #%01000000
     bit SWCHA
     bne p0ri
     dec p0x;p0 x pos--
+    lda #9
+    sta p0ao
 p0ri:;p0 right
     lda #%10000000
     bit SWCHA
     bne df
     inc p0x;p0 x pos++
+    lda #9
+    sta p0ao
 df:;if none action taken by p0
-
+up0pos:;update p1 y position
+    lda p1y ;transfer p1 y pos to a register
+    clc ;clear carry register for comparison
+    cmp #0 ;check if p1 reached to 0 
+    bmi .resp1pos ;reset p1 y position to top if it reached 0
+    dec p1y ;else p1y--
+    jmp endpos ;jump over reset
+.resp1pos:;reset p1 position
+    lda #96
+    sta p1y
+endpos:
     jmp dk
 setx subroutine ;set object's x positon subroutine
     sta WSYNC
@@ -179,7 +201,6 @@ p0_spr:;p0 sprite
     .byte #%00001000         ;    #
     .byte #%00001000         ;    #
     .byte #%00001000         ;    #
-p0h =.-p0_spr;player 0 height = current location -location of p0spr
 p0_trn:;p0 turn sprite
     .byte #%00000000         ;
     .byte #%00001000         ;    #
@@ -200,7 +221,6 @@ p1_spr:;p1 sprite
     .byte #%00101010         ;  # # #
     .byte #%00001000         ;    #
     .byte #%00011100         ;   ###
-p1h =.-p1_spr
 p0_clr:;p0 colour
     .byte #$00
     .byte #$FE
@@ -231,7 +251,6 @@ p1_clr:;p1 colour
     .byte #$40
     .byte #$40
     .byte #$40
-
     org $FFFC
     .word res
     .word res

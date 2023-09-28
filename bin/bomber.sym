@@ -1,12 +1,13 @@
 --- Symbol List (sorted by symbol)
 0.check_p0               f083                  
-0.check_p1               f098                  
+0.check_p1               f09b                  
 0.dp0                    f08d              (R )
-0.dp1                    f0a2              (R )
+0.dp1                    f0a7              (R )
 0.FREE_BYTES             0000                  
+0.resp1pos               f10c              (R )
 0.vll                    f083              (R )
 1.CLEAR_STACK            f006              (R )
-2.div                    f0ed              (R )
+2.div                    f116              (R )
 AUDC0                    0015                  
 AUDC1                    0016                  
 AUDF0                    0017                  
@@ -27,11 +28,12 @@ CXM1P                    0001
 CXP0FB                   0002                  
 CXP1FB                   0003                  
 CXPPMM                   0007                  
-df                       f0e7              (R )
+df                       f100              (R )
 dk                       f03b              (R )
 ENABL                    001f                  
 ENAM0                    001d                  
 ENAM1                    001e                  
+endpos                   f110              (R )
 GRP0                     001b              (R )
 GRP1                     001c              (R )
 HMBL                     0024                  
@@ -50,27 +52,28 @@ INPT5                    000d
 INTIM                    0284                  
 NUSIZ0                   0004                  
 NUSIZ1                   0005              (R )
-ovs                      f0ba              (R )
-p0_clr                   f119              (R )
-p0_spr                   f0fe              (R )
-p0_tclr                  f122                  
-p0_trn                   f107                  
+ovs                      f0c3              (R )
+p0_clr                   f142              (R )
+p0_spr                   f127              (R )
+p0_tclr                  f14b                  
+p0_trn                   f130                  
+p0ao                     0086              (R )
 p0c                      0084              (R )
-p0dw                     f0cc              (R )
-p0h                      0009                  
-p0le                     f0d5              (R )
-p0ri                     f0de              (R )
+p0dw                     f0d9              (R )
+p0h                      0009              (R )
+p0le                     f0e6              (R )
+p0ri                     f0f3              (R )
 p0s                      0082              (R )
-p0up                     f0c3                  
+p0up                     f0cc                  
 p0x                      0080              (R )
 p0y                      0081              (R )
-p1_clr                   f12b              (R )
-p1_spr                   f110              (R )
-p1c                      008a              (R )
-p1h                      0009                  
-p1s                      0088              (R )
-p1x                      0086              (R )
-p1y                      0087              (R )
+p1_clr                   f154              (R )
+p1_spr                   f139              (R )
+p1c                      008b              (R )
+p1h                      0009              (R )
+p1s                      0089              (R )
+p1x                      0087              (R )
+p1y                      0088              (R )
 PF0                      000d              (R )
 PF1                      000e              (R )
 PF2                      000f              (R )
@@ -85,7 +88,7 @@ RESMP1                   0029
 RESP0                    0010              (R )
 RESP1                    0011                  
 RSYNC                    0003                  
-setx                     f0ea              (R )
+setx                     f113              (R )
 SWACNT                   0281                  
 SWBCNT                   0283                  
 SWCHA                    0280              (R )
@@ -98,6 +101,7 @@ TIM1T                    0294
 TIM64T                   0296                  
 TIM8T                    0295                  
 TIMINT                   0285                  
+up0pos                   f100                  
 vbl                      f060              (R )
 VBLANK                   0001              (R )
 VDELBL                   0027                  
