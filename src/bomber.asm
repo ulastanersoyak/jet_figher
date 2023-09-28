@@ -17,7 +17,7 @@ res:;reset
     CLEAN_START
     lda #10 
     sta p0y ;p0y=10
-    lda #60
+    lda #0
     sta p0x ;p0x=60
     lda #83
     sta p1y
@@ -42,6 +42,16 @@ res:;reset
     lda #>p1_clr
     sta p1c+1
 dk:;draw kernel
+    ;calculations and tasks performed in pre vblank
+    lda p0x
+    ldy #0
+    jsr setx ;set player0 horizontal position
+    lda p1x
+    ldy #1
+    jsr setx ;set player1 horizontal position
+    sta WSYNC
+    sta HMOVE ;apply horizontal movements set by subroutine
+    
     lda #2
     sta VSYNC
     sta VBLANK
@@ -119,7 +129,46 @@ ovs:
     bne ovs ;jump to ovs if x!=0
     lda #0
     sta VBLANK ;disable blank scanlines
+
+    ;process input for p0 (up-down-left-right)
+p0up:;check if p0 is pressed up arrow
+    lda #%00010000;p0 up
+    bit SWCHA
+    bne p0dw
+    inc p0y;p0 y pos++
+p0dw:;p0 down
+    lda #%00100000
+    bit SWCHA
+    bne p0le
+    dec p0y;p0 y pos--
+p0le:;p0 left
+    lda #%01000000
+    bit SWCHA
+    bne p0ri
+    dec p0x;p0 x pos--
+p0ri:;p0 right
+    lda #%10000000
+    bit SWCHA
+    bne df
+    inc p0x;p0 x pos++
+df:;if none action taken by p0
+
     jmp dk
+setx subroutine ;set object's x positon subroutine
+    sta WSYNC
+    sec ;set carry flag
+.div:;division loop -since 6502 opcode doesnt include any division, division is achieved via series of subtractions
+    sbc #15 ;subtraction takes 2 clock cycles and branching takes 3 clock cycle thus making a total of 5 clock cycle in each
+            ;subtraction. each CPU clock cycle is equivelent of 3 TIA clock cycles so each division is 15 pixel. to determine 
+            ;p0_x location calculate rough position by dividing by 15 and use remainder to fine tune the exact position
+    bcs .div ;jump to div if a<0
+    eor #7 ;exclusive or with %00000111 to fine tune the x position 
+    repeat 4 ;HMP0 uses 4 bits %xxxx0000
+        asl
+    repend
+    sta HMP0,Y
+    sta RESP0,Y
+    rts
 p0_spr:;p0 sprite
     .byte #%00000000         ;
     .byte #%00010100         ;   # #
@@ -151,7 +200,7 @@ p1_spr:;p1 sprite
     .byte #%00101010         ;  # # #
     .byte #%00001000         ;    #
     .byte #%00011100         ;   ###
-p1h=.-p1_spr
+p1h =.-p1_spr
 p0_clr:;p0 colour
     .byte #$00
     .byte #$FE
