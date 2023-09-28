@@ -1,6 +1,10 @@
 --- Symbol List (sorted by symbol)
+0.check_p0               f071                  
+0.check_p1               f086                  
+0.dp0                    f07b              (R )
+0.dp1                    f090              (R )
 0.FREE_BYTES             0000                  
-0.vll                    f049              (R )
+0.vll                    f071              (R )
 1.CLEAR_STACK            f006              (R )
 AUDC0                    0015                  
 AUDC1                    0016                  
@@ -9,8 +13,8 @@ AUDF1                    0018
 AUDV0                    0019                  
 AUDV1                    001a                  
 COLUBK                   0009              (R )
-COLUP0                   0006                  
-COLUP1                   0007                  
+COLUP0                   0006              (R )
+COLUP1                   0007              (R )
 COLUPF                   0008              (R )
 CTRLPF                   000a              (R )
 CXBLPF                   0006                  
@@ -22,12 +26,12 @@ CXM1P                    0001
 CXP0FB                   0002                  
 CXP1FB                   0003                  
 CXPPMM                   0007                  
-dk                       f013              (R )
+dk                       f03b              (R )
 ENABL                    001f                  
 ENAM0                    001d                  
 ENAM1                    001e                  
-GRP0                     001b                  
-GRP1                     001c                  
+GRP0                     001b              (R )
+GRP1                     001c              (R )
 HMBL                     0024                  
 HMCLR                    002b                  
 HMM0                     0022                  
@@ -43,12 +47,24 @@ INPT4                    000c
 INPT5                    000d                  
 INTIM                    0284                  
 NUSIZ0                   0004                  
-NUSIZ1                   0005                  
-ovs                      f054              (R )
+NUSIZ1                   0005              (R )
+ovs                      f0a8              (R )
+p0_clr                   f0cf              (R )
+p0_spr                   f0b4              (R )
+p0_tclr                  f0d8                  
+p0_trn                   f0bd                  
+p0c                      0084              (R )
+p0h                      0009                  
+p0s                      0082              (R )
 p0x                      0080              (R )
 p0y                      0081              (R )
-p1x                      0082                  
-p1y                      0083                  
+p1_clr                   f0e1              (R )
+p1_spr                   f0c6              (R )
+p1c                      008a              (R )
+p1h                      0009                  
+p1s                      0088              (R )
+p1x                      0086              (R )
+p1y                      0087              (R )
 PF0                      000d              (R )
 PF1                      000e              (R )
 PF2                      000f              (R )
@@ -75,14 +91,14 @@ TIM1T                    0294
 TIM64T                   0296                  
 TIM8T                    0295                  
 TIMINT                   0285                  
-vbl                      f026              (R )
+vbl                      f04e              (R )
 VBLANK                   0001              (R )
 VDELBL                   0027                  
 VDELP0                   0025                  
 VDELP1                   0026                  
 VERSION_MACRO            006a                  
 VERSION_VCS              0069                  
-vl                       f02f                  
+vl                       f057                  
 VSYNC                    0000              (R )
 WSYNC                    0002              (R )
 --- End of Symbol List.

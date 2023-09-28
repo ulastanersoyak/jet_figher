@@ -1,256 +1,256 @@
-------- FILE src/bomber.asm LEVEL 1 PASS 1
-      1  0000					      processor	6502
-------- FILE test/macros/macro.h LEVEL 2 PASS 1
-      0  0000 ????				      include	"test/macros/macro.h"
-      1  0000 ????						; MACRO.H
-      2  0000 ????						; Version 1.06, 3/SEPTEMBER/2004
-      3  0000 ????
-      4  0000 ????	       00 6a	   VERSION_MACRO =	106
-      5  0000 ????
-      6  0000 ????						;
-      7  0000 ????						; THIS FILE IS EXPLICITLY SUPPORTED AS A DASM-PREFERRED COMPANION FILE
-      8  0000 ????						; PLEASE DO *NOT* REDISTRIBUTE MODIFIED VERSIONS OF THIS FILE!
-      9  0000 ????						;
-     10  0000 ????						; This file defines DASM macros useful for development for the Atari 2600.
-     11  0000 ????						; It is distributed as a companion machine-specific support package
-     12  0000 ????						; for the DASM compiler. Updates to this file, DASM, and associated tools are
-     13  0000 ????						; available at at http://www.atari2600.org/dasm
-     14  0000 ????						;
-     15  0000 ????						; Many thanks to the people who have contributed.  If you take issue with the
-     16  0000 ????						; contents, or would like to add something, please write to me
-     17  0000 ????						; (atari2600@taswegian.com) with your contribution.
-     18  0000 ????						;
-     19  0000 ????						; Latest Revisions...
-     20  0000 ????						;
-     21  0000 ????						; 1.06  03/SEP/2004	 - nice revision of VERTICAL_BLANK (Edwin Blink)
-     22  0000 ????						; 1.05  14/NOV/2003	 - Added VERSION_MACRO equate (which will reflect 100x version #)
-     23  0000 ????						;			   This will allow conditional code to verify MACRO.H being
-     24  0000 ????						;			   used for code assembly.
-     25  0000 ????						; 1.04  13/NOV/2003	 - SET_POINTER macro added (16-bit address load)
-     26  0000 ????						;
-     27  0000 ????						; 1.03  23/JUN/2003	 - CLEAN_START macro added - clears TIA, RAM, registers
-     28  0000 ????						;
-     29  0000 ????						; 1.02  14/JUN/2003	 - VERTICAL_SYNC macro added
-     30  0000 ????						;			   (standardised macro for vertical synch code)
-     31  0000 ????						; 1.01  22/MAR/2003	 - SLEEP macro added. 
-     32  0000 ????						;			 - NO_ILLEGAL_OPCODES switch implemented
-     33  0000 ????						; 1.0	22/MAR/2003		Initial release
-     34  0000 ????
-     35  0000 ????						; Note: These macros use illegal opcodes.  To disable illegal opcode usage, 
-     36  0000 ????						;   define the symbol NO_ILLEGAL_OPCODES (-DNO_ILLEGAL_OPCODES=1 on command-line).
-     37  0000 ????						;   If you do not allow illegal opcode usage, you must include this file 
-     38  0000 ????						;   *after* including VCS.H (as the non-illegal opcodes access hardware
-     39  0000 ????						;   registers and require them to be defined first).
-     40  0000 ????
-     41  0000 ????						; Available macros...
-     42  0000 ????						;   SLEEP n		 - sleep for n cycles
-     43  0000 ????						;   VERTICAL_SYNC	 - correct 3 scanline vertical synch code
-     44  0000 ????						;   CLEAN_START	 - set machine to known state on startup
-     45  0000 ????						;   SET_POINTER	 - load a 16-bit absolute to a 16-bit variable
-     46  0000 ????
-     47  0000 ????						;-------------------------------------------------------------------------------
-     48  0000 ????						; SLEEP duration
-     49  0000 ????						; Original author: Thomas Jentzsch
-     50  0000 ????						; Inserts code which takes the specified number of cycles to execute.	This is
-     51  0000 ????						; useful for code where precise timing is required.
-     52  0000 ????						; ILLEGAL-OPCODE VERSION DOES NOT AFFECT FLAGS OR REGISTERS.
-     53  0000 ????						; LEGAL OPCODE VERSION MAY AFFECT FLAGS
-     54  0000 ????						; Uses illegal opcode (DASM 2.20.01 onwards).
-     55  0000 ????
-     56  0000 ????				      MAC	sleep
-     57  0000 ????			   .CYCLES    SET	{1}
-     58  0000 ????
-     59  0000 ????				      IF	.CYCLES < 2
-     60  0000 ????				      ECHO	"MACRO ERROR: 'SLEEP': Duration must be > 1"
-     61  0000 ????				      ERR
-     62  0000 ????				      ENDIF
-     63  0000 ????
-     64  0000 ????				      IF	.CYCLES & 1
-     65  0000 ????				      IFNCONST	NO_ILLEGAL_OPCODES
-     66  0000 ????				      nop	0
-     67  0000 ????				      ELSE
-     68  0000 ????				      bit	VSYNC
-     69  0000 ????				      ENDIF
-     70  0000 ????			   .CYCLES    SET	.CYCLES - 3
-     71  0000 ????				      ENDIF
-     72  0000 ????
-     73  0000 ????				      REPEAT	.CYCLES / 2
-     74  0000 ????				      nop
-     75  0000 ????				      REPEND
-     76  0000 ????				      ENDM		;usage: SLEEP n (n>1)
-     77  0000 ????
-     78  0000 ????						;-------------------------------------------------------------------------------
-     79  0000 ????						; VERTICAL_SYNC
-     80  0000 ????						; revised version by Edwin Blink -- saves bytes!
-     81  0000 ????						; Inserts the code required for a proper 3 scanline vertical sync sequence
-     82  0000 ????						; Note: Alters the accumulator
-     83  0000 ????
-     84  0000 ????						; OUT: A = 0
-     85  0000 ????
-     86  0000 ????				      MAC	vertical_sync
-     87  0000 ????				      lda	#%1110	; each '1' bits generate a VSYNC ON line (bits 1..3)
-     88  0000 ????			   .VSLP1     sta	WSYNC	; 1st '0' bit resets Vsync, 2nd '0' bit exit loop
-     89  0000 ????				      sta	VSYNC
-     90  0000 ????				      lsr
-     91  0000 ????				      bne	.VSLP1	; branch until VYSNC has been reset
-     92  0000 ????				      ENDM
-     93  0000 ????
-     94  0000 ????						;-------------------------------------------------------------------------------
-     95  0000 ????						; CLEAN_START
-     96  0000 ????						; Original author: Andrew Davie
-     97  0000 ????						; Standardised start-up code, clears stack, all TIA registers and RAM to 0
-     98  0000 ????						; Sets stack pointer to $FF, and all registers to 0
-     99  0000 ????						; Sets decimal mode off, sets interrupt flag (kind of un-necessary)
-    100  0000 ????						; Use as very first section of code on boot (ie: at reset)
-    101  0000 ????						; Code written to minimise total ROM usage - uses weird 6502 knowledge :)
-    102  0000 ????
-    103  0000 ????				      MAC	clean_start
-    104  0000 ????				      sei
-    105  0000 ????				      cld
-    106  0000 ????
-    107  0000 ????				      ldx	#0
-    108  0000 ????				      txa
-    109  0000 ????				      tay
-    110  0000 ????			   .CLEAR_STACK dex
-    111  0000 ????				      txs
-    112  0000 ????				      pha
-    113  0000 ????				      bne	.CLEAR_STACK	; SP=$FF, X = A = Y = 0
-    114  0000 ????
-    115  0000 ????				      ENDM
-    116  0000 ????
-    117  0000 ????						;-------------------------------------------------------
-    118  0000 ????						; SET_POINTER
-    119  0000 ????						; Original author: Manuel Rotschkar
-    120  0000 ????						;
-    121  0000 ????						; Sets a 2 byte RAM pointer to an absolute address.
-    122  0000 ????						;
-    123  0000 ????						; Usage: SET_POINTER pointer, address
-    124  0000 ????						; Example: SET_POINTER SpritePTR, SpriteData
-    125  0000 ????						;
-    126  0000 ????						; Note: Alters the accumulator, NZ flags
-    127  0000 ????						; IN 1: 2 byte RAM location reserved for pointer
-    128  0000 ????						; IN 2: absolute address
-    129  0000 ????
-    130  0000 ????				      MAC	set_pointer
-    131  0000 ????			   .POINTER   SET	{1}
-    132  0000 ????			   .ADDRESS   SET	{2}
-    133  0000 ????
-    134  0000 ????				      LDA	#<.ADDRESS	; Get Lowbyte of Address
-    135  0000 ????				      STA	.POINTER	; Store in pointer
-    136  0000 ????				      LDA	#>.ADDRESS	; Get Hibyte of Address
-    137  0000 ????				      STA	.POINTER+1	; Store in pointer+1
-    138  0000 ????
-    139  0000 ????				      ENDM
-    140  0000 ????
-    141  0000 ????						;-------------------------------------------------------
-    142  0000 ????						; BOUNDARY byte#
-    143  0000 ????						; Original author: Denis Debro (borrowed from Bob Smith / Thomas)
-    144  0000 ????						;
-    145  0000 ????						; Push data to a certain position inside a page and keep count of how
-    146  0000 ????						; many free bytes the programmer will have.
-    147  0000 ????						;
-    148  0000 ????						; eg: BOUNDARY 5    ; position at byte #5 in page
-    149  0000 ????
-    150  0000 ????			   .FREE_BYTES SET	0
-    151  0000 ????				      MAC	boundary
-    152  0000 ????				      REPEAT	256
-    153  0000 ????				      IF	<. % {1} = 0
-    154  0000 ????				      MEXIT
-    155  0000 ????				      ELSE
-    156  0000 ????			   .FREE_BYTES SET	.FREE_BYTES + 1
-    157  0000 ????				      .byte	$00
-    158  0000 ????				      ENDIF
-    159  0000 ????				      REPEND
-    160  0000 ????				      ENDM
-    161  0000 ????
-    162  0000 ????
-    163  0000 ????						; EOF
+------- FILE src/bomber.asm LEVEL 1 PASS 3
+      1  fffe					      processor	6502
+------- FILE test/macros/macro.h LEVEL 2 PASS 3
+      0  10000 ????				       include	"test/macros/macro.h"
+      1  10000 ????						; MACRO.H
+      2  10000 ????						; Version 1.06, 3/SEPTEMBER/2004
+      3  10000 ????
+      4  10000 ????		00 6a	    VERSION_MACRO =	106
+      5  10000 ????
+      6  10000 ????						;
+      7  10000 ????						; THIS FILE IS EXPLICITLY SUPPORTED AS A DASM-PREFERRED COMPANION FILE
+      8  10000 ????						; PLEASE DO *NOT* REDISTRIBUTE MODIFIED VERSIONS OF THIS FILE!
+      9  10000 ????						;
+     10  10000 ????						; This file defines DASM macros useful for development for the Atari 2600.
+     11  10000 ????						; It is distributed as a companion machine-specific support package
+     12  10000 ????						; for the DASM compiler. Updates to this file, DASM, and associated tools are
+     13  10000 ????						; available at at http://www.atari2600.org/dasm
+     14  10000 ????						;
+     15  10000 ????						; Many thanks to the people who have contributed.  If you take issue with the
+     16  10000 ????						; contents, or would like to add something, please write to me
+     17  10000 ????						; (atari2600@taswegian.com) with your contribution.
+     18  10000 ????						;
+     19  10000 ????						; Latest Revisions...
+     20  10000 ????						;
+     21  10000 ????						; 1.06  03/SEP/2004	 - nice revision of VERTICAL_BLANK (Edwin Blink)
+     22  10000 ????						; 1.05  14/NOV/2003	 - Added VERSION_MACRO equate (which will reflect 100x version #)
+     23  10000 ????						;			   This will allow conditional code to verify MACRO.H being
+     24  10000 ????						;			   used for code assembly.
+     25  10000 ????						; 1.04  13/NOV/2003	 - SET_POINTER macro added (16-bit address load)
+     26  10000 ????						;
+     27  10000 ????						; 1.03  23/JUN/2003	 - CLEAN_START macro added - clears TIA, RAM, registers
+     28  10000 ????						;
+     29  10000 ????						; 1.02  14/JUN/2003	 - VERTICAL_SYNC macro added
+     30  10000 ????						;			   (standardised macro for vertical synch code)
+     31  10000 ????						; 1.01  22/MAR/2003	 - SLEEP macro added. 
+     32  10000 ????						;			 - NO_ILLEGAL_OPCODES switch implemented
+     33  10000 ????						; 1.0	22/MAR/2003		Initial release
+     34  10000 ????
+     35  10000 ????						; Note: These macros use illegal opcodes.  To disable illegal opcode usage, 
+     36  10000 ????						;   define the symbol NO_ILLEGAL_OPCODES (-DNO_ILLEGAL_OPCODES=1 on command-line).
+     37  10000 ????						;   If you do not allow illegal opcode usage, you must include this file 
+     38  10000 ????						;   *after* including VCS.H (as the non-illegal opcodes access hardware
+     39  10000 ????						;   registers and require them to be defined first).
+     40  10000 ????
+     41  10000 ????						; Available macros...
+     42  10000 ????						;   SLEEP n		 - sleep for n cycles
+     43  10000 ????						;   VERTICAL_SYNC	 - correct 3 scanline vertical synch code
+     44  10000 ????						;   CLEAN_START	 - set machine to known state on startup
+     45  10000 ????						;   SET_POINTER	 - load a 16-bit absolute to a 16-bit variable
+     46  10000 ????
+     47  10000 ????						;-------------------------------------------------------------------------------
+     48  10000 ????						; SLEEP duration
+     49  10000 ????						; Original author: Thomas Jentzsch
+     50  10000 ????						; Inserts code which takes the specified number of cycles to execute.	This is
+     51  10000 ????						; useful for code where precise timing is required.
+     52  10000 ????						; ILLEGAL-OPCODE VERSION DOES NOT AFFECT FLAGS OR REGISTERS.
+     53  10000 ????						; LEGAL OPCODE VERSION MAY AFFECT FLAGS
+     54  10000 ????						; Uses illegal opcode (DASM 2.20.01 onwards).
+     55  10000 ????
+     56  10000 ????				       MAC	sleep
+     57  10000 ????			    .CYCLES    SET	{1}
+     58  10000 ????
+     59  10000 ????				       IF	.CYCLES < 2
+     60  10000 ????				       ECHO	"MACRO ERROR: 'SLEEP': Duration must be > 1"
+     61  10000 ????				       ERR
+     62  10000 ????				       ENDIF
+     63  10000 ????
+     64  10000 ????				       IF	.CYCLES & 1
+     65  10000 ????				       IFNCONST	NO_ILLEGAL_OPCODES
+     66  10000 ????				       nop	0
+     67  10000 ????				       ELSE
+     68  10000 ????				       bit	VSYNC
+     69  10000 ????				       ENDIF
+     70  10000 ????			    .CYCLES    SET	.CYCLES - 3
+     71  10000 ????				       ENDIF
+     72  10000 ????
+     73  10000 ????				       REPEAT	.CYCLES / 2
+     74  10000 ????				       nop
+     75  10000 ????				       REPEND
+     76  10000 ????				       ENDM		;usage: SLEEP n (n>1)
+     77  10000 ????
+     78  10000 ????						;-------------------------------------------------------------------------------
+     79  10000 ????						; VERTICAL_SYNC
+     80  10000 ????						; revised version by Edwin Blink -- saves bytes!
+     81  10000 ????						; Inserts the code required for a proper 3 scanline vertical sync sequence
+     82  10000 ????						; Note: Alters the accumulator
+     83  10000 ????
+     84  10000 ????						; OUT: A = 0
+     85  10000 ????
+     86  10000 ????				       MAC	vertical_sync
+     87  10000 ????				       lda	#%1110	; each '1' bits generate a VSYNC ON line (bits 1..3)
+     88  10000 ????			    .VSLP1     sta	WSYNC	; 1st '0' bit resets Vsync, 2nd '0' bit exit loop
+     89  10000 ????				       sta	VSYNC
+     90  10000 ????				       lsr
+     91  10000 ????				       bne	.VSLP1	; branch until VYSNC has been reset
+     92  10000 ????				       ENDM
+     93  10000 ????
+     94  10000 ????						;-------------------------------------------------------------------------------
+     95  10000 ????						; CLEAN_START
+     96  10000 ????						; Original author: Andrew Davie
+     97  10000 ????						; Standardised start-up code, clears stack, all TIA registers and RAM to 0
+     98  10000 ????						; Sets stack pointer to $FF, and all registers to 0
+     99  10000 ????						; Sets decimal mode off, sets interrupt flag (kind of un-necessary)
+    100  10000 ????						; Use as very first section of code on boot (ie: at reset)
+    101  10000 ????						; Code written to minimise total ROM usage - uses weird 6502 knowledge :)
+    102  10000 ????
+    103  10000 ????				       MAC	clean_start
+    104  10000 ????				       sei
+    105  10000 ????				       cld
+    106  10000 ????
+    107  10000 ????				       ldx	#0
+    108  10000 ????				       txa
+    109  10000 ????				       tay
+    110  10000 ????			    .CLEAR_STACK dex
+    111  10000 ????				       txs
+    112  10000 ????				       pha
+    113  10000 ????				       bne	.CLEAR_STACK	; SP=$FF, X = A = Y = 0
+    114  10000 ????
+    115  10000 ????				       ENDM
+    116  10000 ????
+    117  10000 ????						;-------------------------------------------------------
+    118  10000 ????						; SET_POINTER
+    119  10000 ????						; Original author: Manuel Rotschkar
+    120  10000 ????						;
+    121  10000 ????						; Sets a 2 byte RAM pointer to an absolute address.
+    122  10000 ????						;
+    123  10000 ????						; Usage: SET_POINTER pointer, address
+    124  10000 ????						; Example: SET_POINTER SpritePTR, SpriteData
+    125  10000 ????						;
+    126  10000 ????						; Note: Alters the accumulator, NZ flags
+    127  10000 ????						; IN 1: 2 byte RAM location reserved for pointer
+    128  10000 ????						; IN 2: absolute address
+    129  10000 ????
+    130  10000 ????				       MAC	set_pointer
+    131  10000 ????			    .POINTER   SET	{1}
+    132  10000 ????			    .ADDRESS   SET	{2}
+    133  10000 ????
+    134  10000 ????				       LDA	#<.ADDRESS	; Get Lowbyte of Address
+    135  10000 ????				       STA	.POINTER	; Store in pointer
+    136  10000 ????				       LDA	#>.ADDRESS	; Get Hibyte of Address
+    137  10000 ????				       STA	.POINTER+1	; Store in pointer+1
+    138  10000 ????
+    139  10000 ????				       ENDM
+    140  10000 ????
+    141  10000 ????						;-------------------------------------------------------
+    142  10000 ????						; BOUNDARY byte#
+    143  10000 ????						; Original author: Denis Debro (borrowed from Bob Smith / Thomas)
+    144  10000 ????						;
+    145  10000 ????						; Push data to a certain position inside a page and keep count of how
+    146  10000 ????						; many free bytes the programmer will have.
+    147  10000 ????						;
+    148  10000 ????						; eg: BOUNDARY 5    ; position at byte #5 in page
+    149  10000 ????
+    150  10000 ????			    .FREE_BYTES SET	0
+    151  10000 ????				       MAC	boundary
+    152  10000 ????				       REPEAT	256
+    153  10000 ????				       IF	<. % {1} = 0
+    154  10000 ????				       MEXIT
+    155  10000 ????				       ELSE
+    156  10000 ????			    .FREE_BYTES SET	.FREE_BYTES + 1
+    157  10000 ????				       .byte	$00
+    158  10000 ????				       ENDIF
+    159  10000 ????				       REPEND
+    160  10000 ????				       ENDM
+    161  10000 ????
+    162  10000 ????
+    163  10000 ????						; EOF
 ------- FILE src/bomber.asm
-------- FILE test/macros/vcs.h LEVEL 2 PASS 1
-      0  0000 ????				      include	"test/macros/vcs.h"
-      1  0000 ????						; VCS.H
-      2  0000 ????						; Version 1.05, 13/November/2003
-      3  0000 ????
-      4  0000 ????	       00 69	   VERSION_VCS =	105
-      5  0000 ????
-      6  0000 ????						; THIS IS A PRELIMINARY RELEASE OF *THE* "STANDARD" VCS.H
-      7  0000 ????						; THIS FILE IS EXPLICITLY SUPPORTED AS A DASM-PREFERRED COMPANION FILE
-      8  0000 ????						; PLEASE DO *NOT* REDISTRIBUTE THIS FILE!
-      9  0000 ????						;
-     10  0000 ????						; This file defines hardware registers and memory mapping for the
-     11  0000 ????						; Atari 2600. It is distributed as a companion machine-specific support package
-     12  0000 ????						; for the DASM compiler. Updates to this file, DASM, and associated tools are
-     13  0000 ????						; available at at http://www.atari2600.org/dasm
-     14  0000 ????						;
-     15  0000 ????						; Many thanks to the original author(s) of this file, and to everyone who has
-     16  0000 ????						; contributed to understanding the Atari 2600.  If you take issue with the
-     17  0000 ????						; contents, or naming of registers, please write to me (atari2600@taswegian.com)
-     18  0000 ????						; with your views.  Please contribute, if you think you can improve this
-     19  0000 ????						; file!
-     20  0000 ????						;
-     21  0000 ????						; Latest Revisions...
-     22  0000 ????						; 1.05  13/NOV/2003	  - Correction to 1.04 - now functions as requested by MR.
-     23  0000 ????						;			  - Added VERSION_VCS equate (which will reflect 100x version #)
-     24  0000 ????						;			    This will allow conditional code to verify VCS.H being
-     25  0000 ????						;			    used for code assembly.
-     26  0000 ????						; 1.04  12/NOV/2003	 Added TIA_BASE_WRITE_ADDRESS and TIA_BASE_READ_ADDRESS for
-     27  0000 ????						;			 convenient disassembly/reassembly compatibility for hardware
-     28  0000 ????						;			 mirrored reading/writing differences.	This is more a 
-     29  0000 ????						;			 readability issue, and binary compatibility with disassembled
-     30  0000 ????						;			 and reassembled sources.  Per Manuel Rotschkar's suggestion.
-     31  0000 ????						; 1.03  12/MAY/2003	 Added SEG segment at end of file to fix old-code compatibility
-     32  0000 ????						;			 which was broken by the use of segments in this file, as
-     33  0000 ????						;			 reported by Manuel Polik on [stella] 11/MAY/2003
-     34  0000 ????						; 1.02  22/MAR/2003	 Added TIMINT($285)
-     35  0000 ????						; 1.01				Constant offset added to allow use for 3F-style bankswitching
-     36  0000 ????						;						 - define TIA_BASE_ADDRESS as $40 for Tigervision carts, otherwise
-     37  0000 ????						;						   it is safe to leave it undefined, and the base address will
-     38  0000 ????						;						   be set to 0.  Thanks to Eckhard Stolberg for the suggestion.
-     39  0000 ????						;			    Note, may use -DLABEL=EXPRESSION to define TIA_BASE_ADDRESS
-     40  0000 ????						;			  - register definitions are now generated through assignment
-     41  0000 ????						;			    in uninitialised segments.	This allows a changeable base
-     42  0000 ????						;			    address architecture.
-     43  0000 ????						; 1.0	22/MAR/2003		Initial release
-     44  0000 ????
-     45  0000 ????
-     46  0000 ????						;-------------------------------------------------------------------------------
-     47  0000 ????
-     48  0000 ????						; TIA_BASE_ADDRESS
-     49  0000 ????						; The TIA_BASE_ADDRESS defines the base address of access to TIA registers.
-     50  0000 ????						; Normally 0, the base address should (externally, before including this file)
-     51  0000 ????						; be set to $40 when creating 3F-bankswitched (and other?) cartridges.
-     52  0000 ????						; The reason is that this bankswitching scheme treats any access to locations
-     53  0000 ????						; < $40 as a bankswitch.
-     54  0000 ????
-     55  0000 ????				      IFNCONST	TIA_BASE_ADDRESS
-     56  0000 ????	       00 00	   TIA_BASE_ADDRESS =	0
-     57  0000 ????				      ENDIF
-     58  0000 ????
-     59  0000 ????						; Note: The address may be defined on the command-line using the -D switch, eg:
-     60  0000 ????						; dasm.exe code.asm -DTIA_BASE_ADDRESS=$40 -f3 -v5 -ocode.bin
-     61  0000 ????						; *OR* by declaring the label before including this file, eg:
-     62  0000 ????						; TIA_BASE_ADDRESS = $40
-     63  0000 ????						;   include "vcs.h"
-     64  0000 ????
-     65  0000 ????						; Alternate read/write address capability - allows for some disassembly compatibility
-     66  0000 ????						; usage ; to allow reassembly to binary perfect copies).  This is essentially catering
-     67  0000 ????						; for the mirrored ROM hardware registers.
-     68  0000 ????
-     69  0000 ????						; Usage: As per above, define the TIA_BASE_READ_ADDRESS and/or TIA_BASE_WRITE_ADDRESS
-     70  0000 ????						; using the -D command-line switch, as required.  If the addresses are not defined, 
-     71  0000 ????						; they defaut to the TIA_BASE_ADDRESS.
-     72  0000 ????
-     73  0000 ????				      IFNCONST	TIA_BASE_READ_ADDRESS
-     74  0000 ????	       00 00	   TIA_BASE_READ_ADDRESS =	TIA_BASE_ADDRESS
-     75  0000 ????				      ENDIF
-     76  0000 ????
-     77  0000 ????				      IFNCONST	TIA_BASE_WRITE_ADDRESS
-     78  0000 ????	       00 00	   TIA_BASE_WRITE_ADDRESS =	TIA_BASE_ADDRESS
-     79  0000 ????				      ENDIF
-     80  0000 ????
-     81  0000 ????						;-------------------------------------------------------------------------------
-     82  0000 ????
-     83 U0000 ????				      SEG.U	TIA_REGISTERS_WRITE
+------- FILE test/macros/vcs.h LEVEL 2 PASS 3
+      0  10000 ????				       include	"test/macros/vcs.h"
+      1  10000 ????						; VCS.H
+      2  10000 ????						; Version 1.05, 13/November/2003
+      3  10000 ????
+      4  10000 ????		00 69	    VERSION_VCS =	105
+      5  10000 ????
+      6  10000 ????						; THIS IS A PRELIMINARY RELEASE OF *THE* "STANDARD" VCS.H
+      7  10000 ????						; THIS FILE IS EXPLICITLY SUPPORTED AS A DASM-PREFERRED COMPANION FILE
+      8  10000 ????						; PLEASE DO *NOT* REDISTRIBUTE THIS FILE!
+      9  10000 ????						;
+     10  10000 ????						; This file defines hardware registers and memory mapping for the
+     11  10000 ????						; Atari 2600. It is distributed as a companion machine-specific support package
+     12  10000 ????						; for the DASM compiler. Updates to this file, DASM, and associated tools are
+     13  10000 ????						; available at at http://www.atari2600.org/dasm
+     14  10000 ????						;
+     15  10000 ????						; Many thanks to the original author(s) of this file, and to everyone who has
+     16  10000 ????						; contributed to understanding the Atari 2600.  If you take issue with the
+     17  10000 ????						; contents, or naming of registers, please write to me (atari2600@taswegian.com)
+     18  10000 ????						; with your views.  Please contribute, if you think you can improve this
+     19  10000 ????						; file!
+     20  10000 ????						;
+     21  10000 ????						; Latest Revisions...
+     22  10000 ????						; 1.05  13/NOV/2003	  - Correction to 1.04 - now functions as requested by MR.
+     23  10000 ????						;			  - Added VERSION_VCS equate (which will reflect 100x version #)
+     24  10000 ????						;			    This will allow conditional code to verify VCS.H being
+     25  10000 ????						;			    used for code assembly.
+     26  10000 ????						; 1.04  12/NOV/2003	 Added TIA_BASE_WRITE_ADDRESS and TIA_BASE_READ_ADDRESS for
+     27  10000 ????						;			 convenient disassembly/reassembly compatibility for hardware
+     28  10000 ????						;			 mirrored reading/writing differences.	This is more a 
+     29  10000 ????						;			 readability issue, and binary compatibility with disassembled
+     30  10000 ????						;			 and reassembled sources.  Per Manuel Rotschkar's suggestion.
+     31  10000 ????						; 1.03  12/MAY/2003	 Added SEG segment at end of file to fix old-code compatibility
+     32  10000 ????						;			 which was broken by the use of segments in this file, as
+     33  10000 ????						;			 reported by Manuel Polik on [stella] 11/MAY/2003
+     34  10000 ????						; 1.02  22/MAR/2003	 Added TIMINT($285)
+     35  10000 ????						; 1.01				Constant offset added to allow use for 3F-style bankswitching
+     36  10000 ????						;						 - define TIA_BASE_ADDRESS as $40 for Tigervision carts, otherwise
+     37  10000 ????						;						   it is safe to leave it undefined, and the base address will
+     38  10000 ????						;						   be set to 0.  Thanks to Eckhard Stolberg for the suggestion.
+     39  10000 ????						;			    Note, may use -DLABEL=EXPRESSION to define TIA_BASE_ADDRESS
+     40  10000 ????						;			  - register definitions are now generated through assignment
+     41  10000 ????						;			    in uninitialised segments.	This allows a changeable base
+     42  10000 ????						;			    address architecture.
+     43  10000 ????						; 1.0	22/MAR/2003		Initial release
+     44  10000 ????
+     45  10000 ????
+     46  10000 ????						;-------------------------------------------------------------------------------
+     47  10000 ????
+     48  10000 ????						; TIA_BASE_ADDRESS
+     49  10000 ????						; The TIA_BASE_ADDRESS defines the base address of access to TIA registers.
+     50  10000 ????						; Normally 0, the base address should (externally, before including this file)
+     51  10000 ????						; be set to $40 when creating 3F-bankswitched (and other?) cartridges.
+     52  10000 ????						; The reason is that this bankswitching scheme treats any access to locations
+     53  10000 ????						; < $40 as a bankswitch.
+     54  10000 ????
+     55  10000 ????			   -	       IFNCONST	TIA_BASE_ADDRESS
+     56  10000 ????			   -TIA_BASE_ADDRESS =	0
+     57  10000 ????				       ENDIF
+     58  10000 ????
+     59  10000 ????						; Note: The address may be defined on the command-line using the -D switch, eg:
+     60  10000 ????						; dasm.exe code.asm -DTIA_BASE_ADDRESS=$40 -f3 -v5 -ocode.bin
+     61  10000 ????						; *OR* by declaring the label before including this file, eg:
+     62  10000 ????						; TIA_BASE_ADDRESS = $40
+     63  10000 ????						;   include "vcs.h"
+     64  10000 ????
+     65  10000 ????						; Alternate read/write address capability - allows for some disassembly compatibility
+     66  10000 ????						; usage ; to allow reassembly to binary perfect copies).  This is essentially catering
+     67  10000 ????						; for the mirrored ROM hardware registers.
+     68  10000 ????
+     69  10000 ????						; Usage: As per above, define the TIA_BASE_READ_ADDRESS and/or TIA_BASE_WRITE_ADDRESS
+     70  10000 ????						; using the -D command-line switch, as required.  If the addresses are not defined, 
+     71  10000 ????						; they defaut to the TIA_BASE_ADDRESS.
+     72  10000 ????
+     73  10000 ????			   -	       IFNCONST	TIA_BASE_READ_ADDRESS
+     74  10000 ????			   -TIA_BASE_READ_ADDRESS =	TIA_BASE_ADDRESS
+     75  10000 ????				       ENDIF
+     76  10000 ????
+     77  10000 ????			   -	       IFNCONST	TIA_BASE_WRITE_ADDRESS
+     78  10000 ????			   -TIA_BASE_WRITE_ADDRESS =	TIA_BASE_ADDRESS
+     79  10000 ????				       ENDIF
+     80  10000 ????
+     81  10000 ????						;-------------------------------------------------------------------------------
+     82  10000 ????
+     83 U002d ????				      SEG.U	TIA_REGISTERS_WRITE
      84 U0000					      ORG	TIA_BASE_WRITE_ADDRESS
      85 U0000
      86 U0000							; DO NOT CHANGE THE RELATIVE ORDERING OF REGISTERS!
@@ -303,7 +303,7 @@
     133 U002d
     134 U002d							;-------------------------------------------------------------------------------
     135 U002d
-    136 U0000 ????				      SEG.U	TIA_REGISTERS_READ
+    136 U000e ????				      SEG.U	TIA_REGISTERS_READ
     137 U0000					      ORG	TIA_BASE_READ_ADDRESS
     138 U0000
     139 U0000							;											bit 7	 bit 6
@@ -324,7 +324,7 @@
     154 U000e
     155 U000e							;-------------------------------------------------------------------------------
     156 U000e
-    157 U0000 ????				      SEG.U	RIOT
+    157 U0298 ????				      SEG.U	RIOT
     158 U0280					      ORG	$280
     159 U0280
     160 U0280							; RIOT MEMORY MAP
@@ -369,15 +369,19 @@
     199  0000 ????
     200  0000 ????						; EOF
 ------- FILE src/bomber.asm
-      4 U0000 ????				      seg.u	var
+      4 U008c ????				      seg.u	var
       5 U0080					      org	$80
       6 U0080		       00	   p0x	      byte.b		;player0 x pos
       7 U0081		       00	   p0y	      byte.b		;player0 y pos
-      8 U0082		       00	   p1x	      byte.b		;enemy x pos
-      9 U0083		       00	   p1y	      byte.b		;enemy y pos
-     10  0000 ????				      seg	code
-     11  f000					      org	$F000
-     12  f000				   res			;reset
+      8 U0082		       00 00	   p0s	      word.w		;player0 sprite ptr
+      9 U0084		       00 00	   p0c	      word.w		;player0 colour ptr
+     10 U0086		       00	   p1x	      byte.b		;player1 x pos
+     11 U0087		       00	   p1y	      byte.b		;player1 y pos
+     12 U0088		       00 00	   p1s	      word.w		;player1 sprite ptr
+     13 U008a		       00 00	   p1c	      word.w		;player1 colour ptr
+     14  10000 ????				       seg	code
+     15  f000					      org	$F000
+     16  f000				   res			;reset
       0  f000					      CLEAN_START
       1  f000		       78		      sei
       2  f001		       d8		      cld
@@ -390,60 +394,178 @@
       9  f008		       48		      pha
      10  f009		       d0 fb		      bne	.CLEAR_STACK
      11  f00b
-     14  f00b		       a9 0a		      lda	#10
-     15  f00d		       85 81		      sta	p0y	;p0y=10
-     16  f00f		       a9 3c		      lda	#60
-     17  f011		       85 80		      sta	p0x	;p0x=60
-     18  f013				   dk			;draw kernel
-     19  f013		       a9 02		      lda	#2
-     20  f015		       85 00		      sta	VSYNC
-     21  f017		       85 01		      sta	VBLANK
-     22  f019					      repeat	3
-     23  f019		       85 02		      sta	WSYNC	;start a new frame by renderin 3 vsync scanline
-     22  f019					      repend
-     23  f01b		       85 02		      sta	WSYNC	;start a new frame by renderin 3 vsync scanline
-     22  f01b					      repend
-     23  f01d		       85 02		      sta	WSYNC	;start a new frame by renderin 3 vsync scanline
-     24  f01f					      repend
-     25  f01f		       a9 00		      lda	#0
-     26  f021		       85 00		      sta	VSYNC
-     27  f023		       a2 25		      ldx	#37	;37 vblank lines
-     28  f025		       38		      sec
-     29  f026				   vbl			;vblank loop
-     30  f026		       85 01		      sta	VBLANK
-     31  f028		       ca		      dex		;x--
-     32  f029		       d0 fb		      bne	vbl
-     33  f02b		       a9 00		      lda	#0
-     34  f02d		       85 01		      sta	VBLANK
-     35  f02f				   vl			;visible lines
-     36  f02f							;colour palette -> https://en.wikipedia.org/wiki/List_of_video_game_console_palettes
-     37  f02f		       a9 84		      lda	#$84	;blue
-     38  f031		       85 09		      sta	COLUBK
-     39  f033		       a9 c2		      lda	#$C2	;green
-     40  f035		       85 08		      sta	COLUPF
-     41  f037		       a9 01		      lda	#%00000001	;enable reflection of playfield
-     42  f039		       85 0a		      sta	CTRLPF	;control playfield register (left most bit decides on reflection or repetition)
-     43  f03b		       a9 f0		      lda	#$F0
-     44  f03d		       85 0d		      sta	PF0
-     45  f03f		       a9 fc		      lda	#$FC
-     46  f041		       85 0e		      sta	PF1
-     47  f043		       a9 00		      lda	#0
-     48  f045		       85 0f		      sta	PF2
-     49  f047		       a2 c0		      ldx	#192	;count of remaining scanlines
-     50  f049				   .vll 		;visible line loop
-     51  f049		       85 02		      sta	WSYNC
-     52  f04b		       ca		      dex		;x--
-     53  f04c		       d0 fb		      bne	.vll	;jmp to .vll if x!=0
-     54  f04e		       a9 02		      lda	#2
-     55  f050		       85 01		      sta	VBLANK
-     56  f052		       a2 1e		      ldx	#30	;30 ovescan scanlines
-     57  f054				   ovs
-     58  f054		       85 02		      sta	WSYNC
-     59  f056		       ca		      dex		;x--
-     60  f057		       d0 fb		      bne	ovs	;jump to ovs if x!=0
-     61  f059		       a9 00		      lda	#0
-     62  f05b		       85 01		      sta	VBLANK
-     63  f05d		       4c 13 f0 	      jmp	dk
-     64  fffc					      org	$FFFC
-     65  fffc		       00 f0		      .word.w	res
-     66  fffe		       00 f0		      .word.w	res
+     18  f00b		       a9 0a		      lda	#10
+     19  f00d		       85 81		      sta	p0y	;p0y=10
+     20  f00f		       a9 3c		      lda	#60
+     21  f011		       85 80		      sta	p0x	;p0x=60
+     22  f013		       a9 53		      lda	#83
+     23  f015		       85 87		      sta	p1y
+     24  f017		       a9 36		      lda	#54
+     25  f019		       85 86		      sta	p1x
+     26  f01b							;p0
+     27  f01b		       a9 b4		      lda	#<p0_spr	;set lookup table for p0 sprite
+     28  f01d		       85 82		      sta	p0s
+     29  f01f		       a9 f0		      lda	#>p0_spr
+     30  f021		       85 83		      sta	p0s+1
+     31  f023		       a9 cf		      lda	#<p0_clr	;set lookup table for p0 colour
+     32  f025		       85 84		      sta	p0c
+     33  f027		       a9 f0		      lda	#>p0_clr
+     34  f029		       85 85		      sta	p0c+1
+     35  f02b							;p1
+     36  f02b		       a9 c6		      lda	#<p1_spr	;set lookup table for p0 sprite
+     37  f02d		       85 88		      sta	p1s
+     38  f02f		       a9 f0		      lda	#>p1_spr
+     39  f031		       85 89		      sta	p1s+1
+     40  f033		       a9 e1		      lda	#<p1_clr	;set lookup table for p0 colour
+     41  f035		       85 8a		      sta	p1c
+     42  f037		       a9 f0		      lda	#>p1_clr
+     43  f039		       85 8b		      sta	p1c+1
+     44  f03b				   dk			;draw kernel
+     45  f03b		       a9 02		      lda	#2
+     46  f03d		       85 00		      sta	VSYNC
+     47  f03f		       85 01		      sta	VBLANK
+     48  f041					      repeat	3
+     49  f041		       85 02		      sta	WSYNC	;start a new frame by renderin 3 vsync scanline
+     48  f041					      repend
+     49  f043		       85 02		      sta	WSYNC	;start a new frame by renderin 3 vsync scanline
+     48  f043					      repend
+     49  f045		       85 02		      sta	WSYNC	;start a new frame by renderin 3 vsync scanline
+     50  f047					      repend
+     51  f047		       a9 00		      lda	#0
+     52  f049		       85 00		      sta	VSYNC
+     53  f04b		       a2 25		      ldx	#37	;37 vblank lines
+     54  f04d		       38		      sec
+     55  f04e				   vbl			;vblank loop
+     56  f04e		       85 02		      sta	WSYNC
+     57  f050		       ca		      dex		;x--
+     58  f051		       d0 fb		      bne	vbl
+     59  f053		       a9 00		      lda	#0
+     60  f055		       85 01		      sta	VBLANK	;disable blank scanlines
+     61  f057				   vl			;visible lines
+     62  f057							;colour palette -> https://en.wikipedia.org/wiki/List_of_video_game_console_palettes
+     63  f057		       a9 84		      lda	#$84	;blue
+     64  f059		       85 09		      sta	COLUBK
+     65  f05b		       a9 c2		      lda	#$C2	;green
+     66  f05d		       85 08		      sta	COLUPF
+     67  f05f		       a9 01		      lda	#%00000001	;enable reflection of playfield
+     68  f061		       85 0a		      sta	CTRLPF	;control playfield register (left most bit decides on reflection or repetition)
+     69  f063		       a9 f0		      lda	#$F0
+     70  f065		       85 0d		      sta	PF0
+     71  f067		       a9 fc		      lda	#$FC
+     72  f069		       85 0e		      sta	PF1
+     73  f06b		       a9 00		      lda	#0
+     74  f06d		       85 0f		      sta	PF2
+     75  f06f		       a2 60		      ldx	#96	;half of visible lines because of 2-line kernel usage
+     76  f071				   .vll 		;visible line loop
+     77  f071				   .check_p0		;check if p0 is ready to render
+     78  f071		       8a		      txa		;transfer x to a register
+     79  f072		       38		      sec		;set the carry flag for subtraction
+     80  f073		       e5 81		      sbc	p0y	;subtract p0 y from current line
+     81  f075		       c5 09		      cmp	p0h	;check if sprite is in render position
+     82  f077		       90 02		      bcc	.dp0	;if rs < p0h, draw p0
+     83  f079		       a9 00		      lda	#0	;else set a register to 0 in order to prepare for next iter
+     84  f07b				   .dp0 		;draw player0 sprite
+     85  f07b		       a8		      tay		;transfer a to y
+     86  f07c		       b1 82		      lda	(p0s),Y
+     87  f07e		       85 02		      sta	WSYNC
+     88  f080		       85 1b		      sta	GRP0
+     89  f082		       b1 84		      lda	(p0c),Y
+     90  f084		       85 06		      sta	COLUP0
+     91  f086
+     92  f086				   .check_p1		;check if p1 is ready to render
+     93  f086		       8a		      txa		;transfer x to a register
+     94  f087		       38		      sec		;set the carry flag for subtraction
+     95  f088		       e5 87		      sbc	p1y	;subtract p0 y from current line
+     96  f08a		       c5 09		      cmp	p1h	;check if sprite is in render position
+     97  f08c		       90 02		      bcc	.dp1	;if rs < p0h, draw p0
+     98  f08e		       a9 00		      lda	#0	;else set a register to 0 in order to prepare for next iter
+     99  f090				   .dp1 		;draw player1 sprite
+    100  f090		       a8		      tay		;transfer a to y
+    101  f091		       a9 05		      lda	#%00000101
+    102  f093		       85 05		      sta	NUSIZ1
+    103  f095		       b1 88		      lda	(p1s),Y
+    104  f097		       85 02		      sta	WSYNC
+    105  f099		       85 1c		      sta	GRP1
+    106  f09b		       b1 8a		      lda	(p1c),Y
+    107  f09d		       85 07		      sta	COLUP1
+    108  f09f
+    109  f09f		       ca		      dex
+    110  f0a0		       d0 cf		      bne	.vll
+    111  f0a2
+    112  f0a2							;overcan!!
+    113  f0a2		       a9 02		      lda	#2
+    114  f0a4		       85 01		      sta	VBLANK
+    115  f0a6		       a2 1e		      ldx	#30	;30 ovescan scanlines
+    116  f0a8				   ovs
+    117  f0a8		       85 02		      sta	WSYNC
+    118  f0aa		       ca		      dex		;x--
+    119  f0ab		       d0 fb		      bne	ovs	;jump to ovs if x!=0
+    120  f0ad		       a9 00		      lda	#0
+    121  f0af		       85 01		      sta	VBLANK	;disable blank scanlines
+    122  f0b1		       4c 3b f0 	      jmp	dk
+    123  f0b4				   p0_spr		;p0 sprite
+    124  f0b4		       00		      .byte.b	#%00000000	;
+    125  f0b5		       14		      .byte.b	#%00010100	;   # #
+    126  f0b6		       7f		      .byte.b	#%01111111	; #######
+    127  f0b7		       3e		      .byte.b	#%00111110	;  #####
+    128  f0b8		       1c		      .byte.b	#%00011100	;   ###
+    129  f0b9		       1c		      .byte.b	#%00011100	;   ###
+    130  f0ba		       08		      .byte.b	#%00001000	;    #
+    131  f0bb		       08		      .byte.b	#%00001000	;    #
+    132  f0bc		       08		      .byte.b	#%00001000	;    #
+    133  f0bc		       00 09	   p0h	      =	.-p0_spr	;player 0 height = current location -location of p0spr
+    134  f0bd				   p0_trn		;p0 turn sprite
+    135  f0bd		       00		      .byte.b	#%00000000	;
+    136  f0be		       08		      .byte.b	#%00001000	;    #
+    137  f0bf		       3e		      .byte.b	#%00111110	;  #####
+    138  f0c0		       1c		      .byte.b	#%00011100	;   ###
+    139  f0c1		       1c		      .byte.b	#%00011100	;   ###
+    140  f0c2		       1c		      .byte.b	#%00011100	;   ###
+    141  f0c3		       08		      .byte.b	#%00001000	;    #
+    142  f0c4		       08		      .byte.b	#%00001000	;    #
+    143  f0c5		       08		      .byte.b	#%00001000	;    #
+    144  f0c6				   p1_spr		;p1 sprite
+    145  f0c6		       00		      .byte.b	#%00000000	;
+    146  f0c7		       08		      .byte.b	#%00001000	;    #
+    147  f0c8		       08		      .byte.b	#%00001000	;    #
+    148  f0c9		       2a		      .byte.b	#%00101010	;  # # #
+    149  f0ca		       3e		      .byte.b	#%00111110	;  #####
+    150  f0cb		       7f		      .byte.b	#%01111111	; #######
+    151  f0cc		       2a		      .byte.b	#%00101010	;  # # #
+    152  f0cd		       08		      .byte.b	#%00001000	;    #
+    153  f0ce		       1c		      .byte.b	#%00011100	;   ###
+    154  f0ce		       00 09	   p1h	      =	.-p1_spr
+    155  f0cf				   p0_clr		;p0 colour
+    156  f0cf		       00		      .byte.b	#$00
+    157  f0d0		       fe		      .byte.b	#$FE
+    158  f0d1		       0c		      .byte.b	#$0C
+    159  f0d2		       0e		      .byte.b	#$0E
+    160  f0d3		       0e		      .byte.b	#$0E
+    161  f0d4		       04		      .byte.b	#$04
+    162  f0d5		       ba		      .byte.b	#$BA
+    163  f0d6		       0e		      .byte.b	#$0E
+    164  f0d7		       08		      .byte.b	#$08
+    165  f0d8				   p0_tclr		;p0 turn colour
+    166  f0d8		       00		      .byte.b	#$00
+    167  f0d9		       fe		      .byte.b	#$FE
+    168  f0da		       0c		      .byte.b	#$0C
+    169  f0db		       0e		      .byte.b	#$0E
+    170  f0dc		       0e		      .byte.b	#$0E
+    171  f0dd		       04		      .byte.b	#$04
+    172  f0de		       0e		      .byte.b	#$0E
+    173  f0df		       0e		      .byte.b	#$0E
+    174  f0e0		       08		      .byte.b	#$08
+    175  f0e1				   p1_clr		;p1 colour
+    176  f0e1		       00		      .byte.b	#$00
+    177  f0e2		       32		      .byte.b	#$32
+    178  f0e3		       32		      .byte.b	#$32
+    179  f0e4		       0e		      .byte.b	#$0E
+    180  f0e5		       40		      .byte.b	#$40
+    181  f0e6		       40		      .byte.b	#$40
+    182  f0e7		       40		      .byte.b	#$40
+    183  f0e8		       40		      .byte.b	#$40
+    184  f0e9		       40		      .byte.b	#$40
+    185  f0ea
+    186  fffc					      org	$FFFC
+    187  fffc		       00 f0		      .word.w	res
+    188  fffe		       00 f0		      .word.w	res
