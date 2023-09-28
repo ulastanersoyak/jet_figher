@@ -1,6 +1,6 @@
     processor 6502
-    include "../include/macro.h"
-    include "../include/vcs.h"
+    include "test/macros/macro.h"
+    include "test/macros/vcs.h"
     seg.u var
     org $80
 p0x byte ;player0 x pos
@@ -61,7 +61,6 @@ ovs:
     lda #0
     sta VBLANK
     jmp dk
-
     org $FFFC
     .word res
     .word res

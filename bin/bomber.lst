@@ -1,7 +1,7 @@
 ------- FILE src/bomber.asm LEVEL 1 PASS 1
       1  0000					      processor	6502
-------- FILE ../include/macro.h LEVEL 2 PASS 1
-      0  0000 ????				      include	"../include/macro.h"
+------- FILE test/macros/macro.h LEVEL 2 PASS 1
+      0  0000 ????				      include	"test/macros/macro.h"
       1  0000 ????						; MACRO.H
       2  0000 ????						; Version 1.06, 3/SEPTEMBER/2004
       3  0000 ????
@@ -166,8 +166,8 @@
     162  0000 ????
     163  0000 ????						; EOF
 ------- FILE src/bomber.asm
-------- FILE ../include/vcs.h LEVEL 2 PASS 1
-      0  0000 ????				      include	"../include/vcs.h"
+------- FILE test/macros/vcs.h LEVEL 2 PASS 1
+      0  0000 ????				      include	"test/macros/vcs.h"
       1  0000 ????						; VCS.H
       2  0000 ????						; Version 1.05, 13/November/2003
       3  0000 ????
@@ -421,8 +421,8 @@
      38  f031		       85 09		      sta	COLUBK
      39  f033		       a9 c2		      lda	#$C2	;green
      40  f035		       85 08		      sta	COLUPF
-     41  f037		       a9 01		      lda	#%00000001
-     42  f039		       85 0a		      sta	CTRLPF
+     41  f037		       a9 01		      lda	#%00000001	;enable reflection of playfield
+     42  f039		       85 0a		      sta	CTRLPF	;control playfield register (left most bit decides on reflection or repetition)
      43  f03b		       a9 f0		      lda	#$F0
      44  f03d		       85 0d		      sta	PF0
      45  f03f		       a9 fc		      lda	#$FC
