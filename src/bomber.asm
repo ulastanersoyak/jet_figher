@@ -14,18 +14,21 @@ p1y byte ;player1 y pos
 p1s word ;player1 sprite ptr
 p1c word ;player1 colour ptr
 p1h = 9
+rng byte ;generate psedo random numbers for p1y
     seg code 
     org $F000
 res:;reset
     CLEAN_START
-    lda #10 
+    lda #10
     sta p0y ;p0y=10
-    lda #0
-    sta p0x ;p0x=60
+    lda #68
+    sta p0x ;p0x=68
     lda #83
     sta p1y
     lda #54
     sta p1x
+    lda #%11010100
+    sta rng
     ;p0
     lda #<p0_spr;set lookup table for p0 sprite
     sta p0s
@@ -110,7 +113,6 @@ vl;visible lines
     cmp p1h ;check if sprite is in render position
     bcc .dp1 ;if rs < p0h, draw p0
     lda #0 ;else set a register to 0 in order to prepare for next iter
-    sta p0ao
 .dp1;draw player1 sprite
     tay ;transfer a to y
     lda #%00000101
@@ -164,7 +166,7 @@ p0ri:;p0 right
     lda #9
     sta p0ao
 df:;if none action taken by p0
-up0pos:;update p1 y position
+up1pos:;update p1 y position
     lda p1y ;transfer p1 y pos to a register
     clc ;clear carry register for comparison
     cmp #0 ;check if p1 reached to 0 
@@ -172,8 +174,7 @@ up0pos:;update p1 y position
     dec p1y ;else p1y--
     jmp endpos ;jump over reset
 .resp1pos:;reset p1 position
-    lda #96
-    sta p1y
+    jsr rngp1
 endpos:
     jmp dk
 setx subroutine ;set object's x positon subroutine
@@ -190,6 +191,26 @@ setx subroutine ;set object's x positon subroutine
     repend
     sta HMP0,Y
     sta RESP0,Y
+    rts
+rngp1 subroutine;random number generator for p1 starting position
+    lda rng
+    asl
+    eor rng
+    asl
+    eor rng
+    asl
+    asl
+    eor rng
+    asl
+    rol rng ;performs a series of shifts and bit operations
+    lsr
+    lsr;divide the value by 4 with 2 right shifts
+    sta p1x;save random number on player1 x position
+    lda #30
+    adc p1x;30+p1x to compensate for left playfield 
+    sta p1x;set new value to the p1x
+    lda #96
+    sta p1y;set the y-position to the top of the screen
     rts
 p0_spr:;p0 sprite
     .byte #%00000000         ;
