@@ -409,20 +409,20 @@
      30  f01b		       a9 d4		      lda	#%11010100
      31  f01d		       85 8d		      sta	rng
      32  f01f							;p0
-     33  f01f		       a9 46		      lda	#<p0_spr	;set lookup table for p0 sprite
+     33  f01f		       a9 7a		      lda	#<p0_spr	;set lookup table for p0 sprite
      34  f021		       85 82		      sta	p0s
      35  f023		       a9 f1		      lda	#>p0_spr
      36  f025		       85 83		      sta	p0s+1
-     37  f027		       a9 61		      lda	#<p0_clr	;set lookup table for p0 colour
+     37  f027		       a9 95		      lda	#<p0_clr	;set lookup table for p0 colour
      38  f029		       85 84		      sta	p0c
      39  f02b		       a9 f1		      lda	#>p0_clr
      40  f02d		       85 85		      sta	p0c+1
      41  f02f							;p1
-     42  f02f		       a9 58		      lda	#<p1_spr	;set lookup table for p0 sprite
+     42  f02f		       a9 8c		      lda	#<p1_spr	;set lookup table for p0 sprite
      43  f031		       85 89		      sta	p1s
      44  f033		       a9 f1		      lda	#>p1_spr
      45  f035		       85 8a		      sta	p1s+1
-     46  f037		       a9 73		      lda	#<p1_clr	;set lookup table for p0 colour
+     46  f037		       a9 a7		      lda	#<p1_clr	;set lookup table for p0 colour
      47  f039		       85 8b		      sta	p1c
      48  f03b		       a9 f1		      lda	#>p1_clr
      49  f03d		       85 8c		      sta	p1c+1
@@ -430,10 +430,10 @@
      51  f03f							;calculations and tasks performed in pre vblank
      52  f03f		       a5 80		      lda	p0x
      53  f041		       a0 00		      ldy	#0
-     54  f043		       20 14 f1 	      jsr	setx	;set player0 horizontal position
+     54  f043		       20 43 f1 	      jsr	setx	;set player0 horizontal position
      55  f046		       a5 87		      lda	p1x
      56  f048		       a0 01		      ldy	#1
-     57  f04a		       20 14 f1 	      jsr	setx	;set player1 horizontal position
+     57  f04a		       20 43 f1 	      jsr	setx	;set player1 horizontal position
      58  f04d		       85 02		      sta	WSYNC
      59  f04f		       85 2a		      sta	HMOVE	;apply horizontal movements set by subroutine
      60  f051
@@ -457,210 +457,244 @@
      74  f067		       d0 fb		      bne	vbl
      75  f069		       a9 00		      lda	#0
      76  f06b		       85 01		      sta	VBLANK	;disable blank scanlines
-     77  f06d				   vl			;visible lines
-     78  f06d							;colour palette -> https://en.wikipedia.org/wiki/List_of_video_game_console_palettes
-     79  f06d		       a9 84		      lda	#$84	;blue
-     80  f06f		       85 09		      sta	COLUBK
-     81  f071		       a9 c2		      lda	#$C2	;green
-     82  f073		       85 08		      sta	COLUPF
-     83  f075		       a9 01		      lda	#%00000001	;enable reflection of playfield
-     84  f077		       85 0a		      sta	CTRLPF	;control playfield register (left most bit decides on reflection or repetition)
-     85  f079		       a9 f0		      lda	#$F0
-     86  f07b		       85 0d		      sta	PF0
-     87  f07d		       a9 fc		      lda	#$FC
-     88  f07f		       85 0e		      sta	PF1
-     89  f081		       a9 00		      lda	#0
-     90  f083		       85 0f		      sta	PF2
-     91  f085		       a2 60		      ldx	#96	;half of visible lines because of 2-line kernel usag
-     92  f087				   .vll 		;visible line loop
-     93  f087				   .check_p0		;check if p0 is ready to render
-     94  f087		       8a		      txa		;transfer x to a register
-     95  f088		       38		      sec		;set the carry flag for subtraction
-     96  f089		       e5 81		      sbc	p0y	;subtract p0 y from current line
-     97  f08b		       c5 09		      cmp	p0h	;check if sprite is in render position
-     98  f08d		       90 02		      bcc	.dp0	;if rs < p0h, draw p0
-     99  f08f		       a9 00		      lda	#0	;else set a register to 0 in order to prepare for next iter
-    100  f091				   .dp0 		;draw player0 sprite
-    101  f091		       18		      clc		;clear carry flag before addition
-    102  f092		       65 86		      adc	p0ao
-    103  f094		       a8		      tay		;transfer a to y
-    104  f095		       b1 82		      lda	(p0s),Y
-    105  f097		       85 02		      sta	WSYNC
-    106  f099		       85 1b		      sta	GRP0
-    107  f09b		       b1 84		      lda	(p0c),Y
-    108  f09d		       85 06		      sta	COLUP0
-    109  f09f				   .check_p1		;check if p1 is ready to render
-    110  f09f		       8a		      txa		;transfer x to a register
-    111  f0a0		       38		      sec		;set the carry flag for subtraction
-    112  f0a1		       e5 88		      sbc	p1y	;subtract p0 y from current line
-    113  f0a3		       c5 09		      cmp	p1h	;check if sprite is in render position
-    114  f0a5		       90 02		      bcc	.dp1	;if rs < p0h, draw p0
-    115  f0a7		       a9 00		      lda	#0	;else set a register to 0 in order to prepare for next iter
-    116  f0a9				   .dp1 		;draw player1 sprite
+     77  f06d							;scoreboard setup
+     78  f06d							;clear TIA register before each frame
+     79  f06d		       a9 00		      lda	#0
+     80  f06f		       85 0d		      sta	PF0
+     81  f071		       85 0e		      sta	PF1
+     82  f073		       85 0f		      sta	PF2
+     83  f075		       85 1b		      sta	GRP0
+     84  f077		       85 1c		      sta	GRP1
+     85  f079		       85 08		      sta	COLUPF
+     86  f07b		       a2 14		      ldx	#20
+     87  f07d				   scl			;scoreboard loop
+     88  f07d		       85 02		      sta	WSYNC
+     89  f07f		       ca		      dex		;x--
+     90  f080		       d0 fb		      bne	scl
+     91  f082				   vl			;visible lines
+     92  f082							;colour palette -> https://en.wikipedia.org/wiki/List_of_video_game_console_palettes
+     93  f082		       a9 84		      lda	#$84	;blue
+     94  f084		       85 09		      sta	COLUBK
+     95  f086		       a9 c2		      lda	#$C2	;green
+     96  f088		       85 08		      sta	COLUPF
+     97  f08a		       a9 01		      lda	#%00000001	;enable reflection of playfield
+     98  f08c		       85 0a		      sta	CTRLPF	;control playfield register (left most bit decides on reflection or repetition)
+     99  f08e		       a9 f0		      lda	#$F0
+    100  f090		       85 0d		      sta	PF0
+    101  f092		       a9 fc		      lda	#$FC
+    102  f094		       85 0e		      sta	PF1
+    103  f096		       a9 00		      lda	#0
+    104  f098		       85 0f		      sta	PF2
+    105  f09a		       a2 54		      ldx	#84	;half of visible lines because of 2-line kernel usag
+    106  f09c				   .vll 		;visible line loop
+    107  f09c				   .check_p0		;check if p0 is ready to render
+    108  f09c		       8a		      txa		;transfer x to a register
+    109  f09d		       38		      sec		;set the carry flag for subtraction
+    110  f09e		       e5 81		      sbc	p0y	;subtract p0 y from current line
+    111  f0a0		       c5 09		      cmp	p0h	;check if sprite is in render position
+    112  f0a2		       90 02		      bcc	.dp0	;if rs < p0h, draw p0
+    113  f0a4		       a9 00		      lda	#0	;else set a register to 0 in order to prepare for next iter
+    114  f0a6				   .dp0 		;draw player0 sprite
+    115  f0a6		       18		      clc		;clear carry flag before addition
+    116  f0a7		       65 86		      adc	p0ao
     117  f0a9		       a8		      tay		;transfer a to y
-    118  f0aa		       a9 05		      lda	#%00000101
-    119  f0ac		       85 05		      sta	NUSIZ1
-    120  f0ae		       b1 89		      lda	(p1s),Y
-    121  f0b0		       85 02		      sta	WSYNC
-    122  f0b2		       85 1c		      sta	GRP1
-    123  f0b4		       b1 8b		      lda	(p1c),Y
-    124  f0b6		       85 07		      sta	COLUP1
-    125  f0b8		       ca		      dex
-    126  f0b9		       d0 cc		      bne	.vll
-    127  f0bb		       a9 00		      lda	#0
-    128  f0bd		       85 86		      sta	p0ao
-    129  f0bf							;overcan
-    130  f0bf		       a9 02		      lda	#2
-    131  f0c1		       85 01		      sta	VBLANK
-    132  f0c3		       a2 1e		      ldx	#30	;30 ovescan scanlines
-    133  f0c5				   ovs
-    134  f0c5		       85 02		      sta	WSYNC
-    135  f0c7		       ca		      dex		;x--
-    136  f0c8		       d0 fb		      bne	ovs	;jump to ovs if x!=0
-    137  f0ca		       a9 00		      lda	#0
-    138  f0cc		       85 01		      sta	VBLANK	;disable blank scanlines
-    139  f0ce							;process input for p0 (up-down-left-right)
-    140  f0ce				   p0up 		;check if p0 is pressed up arrow
-    141  f0ce		       a9 10		      lda	#%00010000	;p0 up
-    142  f0d0		       2c 80 02 	      bit	SWCHA
-    143  f0d3		       d0 06		      bne	p0dw
-    144  f0d5		       e6 81		      inc	p0y	;p0 y pos++
-    145  f0d7		       a9 00		      lda	#0
-    146  f0d9		       85 86		      sta	p0ao
-    147  f0db				   p0dw 		;p0 down
-    148  f0db		       a9 20		      lda	#%00100000
-    149  f0dd		       2c 80 02 	      bit	SWCHA
-    150  f0e0		       d0 06		      bne	p0le
-    151  f0e2		       c6 81		      dec	p0y	;p0 y pos--
-    152  f0e4		       a9 00		      lda	#0
-    153  f0e6		       85 86		      sta	p0ao
-    154  f0e8				   p0le 		;p0 left
-    155  f0e8		       a9 40		      lda	#%01000000
-    156  f0ea		       2c 80 02 	      bit	SWCHA
-    157  f0ed		       d0 06		      bne	p0ri
-    158  f0ef		       c6 80		      dec	p0x	;p0 x pos--
-    159  f0f1		       a9 09		      lda	#9
-    160  f0f3		       85 86		      sta	p0ao
-    161  f0f5				   p0ri 		;p0 right
-    162  f0f5		       a9 80		      lda	#%10000000
-    163  f0f7		       2c 80 02 	      bit	SWCHA
-    164  f0fa		       d0 06		      bne	df
-    165  f0fc		       e6 80		      inc	p0x	;p0 x pos++
-    166  f0fe		       a9 09		      lda	#9
-    167  f100		       85 86		      sta	p0ao
-    168  f102				   df			;if none action taken by p0
-    169  f102				   up1pos		;update p1 y position
-    170  f102		       a5 88		      lda	p1y	;transfer p1 y pos to a register
-    171  f104		       18		      clc		;clear carry register for comparison
-    172  f105		       c9 00		      cmp	#0	;check if p1 reached to 0
-    173  f107		       30 05		      bmi	.resp1pos	;reset p1 y position to top if it reached 0
-    174  f109		       c6 88		      dec	p1y	;else p1y--
-    175  f10b		       4c 11 f1 	      jmp	endpos	;jump over reset
-    176  f10e				   .resp1pos		;reset p1 position
-    177  f10e		       20 28 f1 	      jsr	rngp1
-    178  f111				   endpos
-    179  f111		       4c 3f f0 	      jmp	dk
-    180  f114				   setx       subroutine		;set object's x positon subroutine
-    181  f114		       85 02		      sta	WSYNC
-    182  f116		       38		      sec		;set carry flag
-    183  f117				   .div 		;division loop -since 6502 opcode doesnt include any division, division is achieved via series of subtractions
-    184  f117		       e9 0f		      sbc	#15	;subtraction takes 2 clock cycles and branching takes 3 clock cycle thus making a total of 5 clock cycle in each
-    185  f119							;subtraction. each CPU clock cycle is equivelent of 3 TIA clock cycles so each division is 15 pixel. to determine
-    186  f119							;p0_x location calculate rough position by dividing by 15 and use remainder to fine tune the exact position
-    187  f119		       b0 fc		      bcs	.div	;jump to div if a<0
-    188  f11b		       49 07		      eor	#7	;exclusive or with %00000111 to fine tune the x position
-    189  f11d					      repeat	4	;HMP0 uses 4 bits %xxxx0000
-    190  f11d		       0a		      asl
-    189  f11d					      repend
-    190  f11e		       0a		      asl
-    189  f11e					      repend
-    190  f11f		       0a		      asl
-    189  f11f					      repend
-    190  f120		       0a		      asl
-    191  f121					      repend
-    192  f121		       99 20 00 	      sta	HMP0,Y
-    193  f124		       99 10 00 	      sta	RESP0,Y
-    194  f127		       60		      rts
-    195  f128				   rngp1      subroutine		;random number generator for p1 starting position
-    196  f128		       a5 8d		      lda	rng
-    197  f12a		       0a		      asl
-    198  f12b		       45 8d		      eor	rng
-    199  f12d		       0a		      asl
-    200  f12e		       45 8d		      eor	rng
-    201  f130		       0a		      asl
-    202  f131		       0a		      asl
-    203  f132		       45 8d		      eor	rng
-    204  f134		       0a		      asl
-    205  f135		       26 8d		      rol	rng	;performs a series of shifts and bit operations
-    206  f137		       4a		      lsr
-    207  f138		       4a		      lsr		;divide the value by 4 with 2 right shifts
-    208  f139		       85 87		      sta	p1x	;save random number on player1 x position
-    209  f13b		       a9 1e		      lda	#30
-    210  f13d		       65 87		      adc	p1x	;30+p1x to compensate for left playfield
-    211  f13f		       85 87		      sta	p1x	;set new value to the p1x
-    212  f141		       a9 60		      lda	#96
-    213  f143		       85 88		      sta	p1y	;set the y-position to the top of the screen
-    214  f145		       60		      rts
-    215  f146				   p0_spr		;p0 sprite
-    216  f146		       00		      .byte.b	#%00000000	;
-    217  f147		       14		      .byte.b	#%00010100	;   # #
-    218  f148		       7f		      .byte.b	#%01111111	; #######
-    219  f149		       3e		      .byte.b	#%00111110	;  #####
-    220  f14a		       1c		      .byte.b	#%00011100	;   ###
-    221  f14b		       1c		      .byte.b	#%00011100	;   ###
-    222  f14c		       08		      .byte.b	#%00001000	;    #
-    223  f14d		       08		      .byte.b	#%00001000	;    #
-    224  f14e		       08		      .byte.b	#%00001000	;    #
-    225  f14f				   p0_trn		;p0 turn sprite
-    226  f14f		       00		      .byte.b	#%00000000	;
-    227  f150		       08		      .byte.b	#%00001000	;    #
-    228  f151		       3e		      .byte.b	#%00111110	;  #####
-    229  f152		       1c		      .byte.b	#%00011100	;   ###
-    230  f153		       1c		      .byte.b	#%00011100	;   ###
-    231  f154		       1c		      .byte.b	#%00011100	;   ###
-    232  f155		       08		      .byte.b	#%00001000	;    #
-    233  f156		       08		      .byte.b	#%00001000	;    #
-    234  f157		       08		      .byte.b	#%00001000	;    #
-    235  f158				   p1_spr		;p1 sprite
-    236  f158		       00		      .byte.b	#%00000000	;
-    237  f159		       08		      .byte.b	#%00001000	;    #
-    238  f15a		       08		      .byte.b	#%00001000	;    #
-    239  f15b		       2a		      .byte.b	#%00101010	;  # # #
-    240  f15c		       3e		      .byte.b	#%00111110	;  #####
-    241  f15d		       7f		      .byte.b	#%01111111	; #######
-    242  f15e		       2a		      .byte.b	#%00101010	;  # # #
-    243  f15f		       08		      .byte.b	#%00001000	;    #
-    244  f160		       1c		      .byte.b	#%00011100	;   ###
-    245  f161				   p0_clr		;p0 colour
-    246  f161		       00		      .byte.b	#$00
-    247  f162		       fe		      .byte.b	#$FE
-    248  f163		       0c		      .byte.b	#$0C
-    249  f164		       0e		      .byte.b	#$0E
-    250  f165		       0e		      .byte.b	#$0E
-    251  f166		       04		      .byte.b	#$04
-    252  f167		       ba		      .byte.b	#$BA
-    253  f168		       0e		      .byte.b	#$0E
-    254  f169		       08		      .byte.b	#$08
-    255  f16a				   p0_tclr		;p0 turn colour
-    256  f16a		       00		      .byte.b	#$00
-    257  f16b		       fe		      .byte.b	#$FE
-    258  f16c		       0c		      .byte.b	#$0C
-    259  f16d		       0e		      .byte.b	#$0E
-    260  f16e		       0e		      .byte.b	#$0E
-    261  f16f		       04		      .byte.b	#$04
-    262  f170		       0e		      .byte.b	#$0E
-    263  f171		       0e		      .byte.b	#$0E
-    264  f172		       08		      .byte.b	#$08
-    265  f173				   p1_clr		;p1 colour
-    266  f173		       00		      .byte.b	#$00
-    267  f174		       32		      .byte.b	#$32
-    268  f175		       32		      .byte.b	#$32
-    269  f176		       0e		      .byte.b	#$0E
-    270  f177		       40		      .byte.b	#$40
-    271  f178		       40		      .byte.b	#$40
-    272  f179		       40		      .byte.b	#$40
-    273  f17a		       40		      .byte.b	#$40
-    274  f17b		       40		      .byte.b	#$40
-    275  fffc					      org	$FFFC
-    276  fffc		       00 f0		      .word.w	res
-    277  fffe		       00 f0		      .word.w	res
+    118  f0aa		       b1 82		      lda	(p0s),Y
+    119  f0ac		       85 02		      sta	WSYNC
+    120  f0ae		       85 1b		      sta	GRP0
+    121  f0b0		       b1 84		      lda	(p0c),Y
+    122  f0b2		       85 06		      sta	COLUP0
+    123  f0b4				   .check_p1		;check if p1 is ready to render
+    124  f0b4		       8a		      txa		;transfer x to a register
+    125  f0b5		       38		      sec		;set the carry flag for subtraction
+    126  f0b6		       e5 88		      sbc	p1y	;subtract p0 y from current line
+    127  f0b8		       c5 09		      cmp	p1h	;check if sprite is in render position
+    128  f0ba		       90 02		      bcc	.dp1	;if rs < p0h, draw p0
+    129  f0bc		       a9 00		      lda	#0	;else set a register to 0 in order to prepare for next iter
+    130  f0be				   .dp1 		;draw player1 sprite
+    131  f0be		       a8		      tay		;transfer a to y
+    132  f0bf		       a9 05		      lda	#%00000101
+    133  f0c1		       85 05		      sta	NUSIZ1
+    134  f0c3		       b1 89		      lda	(p1s),Y
+    135  f0c5		       85 02		      sta	WSYNC
+    136  f0c7		       85 1c		      sta	GRP1
+    137  f0c9		       b1 8b		      lda	(p1c),Y
+    138  f0cb		       85 07		      sta	COLUP1
+    139  f0cd		       ca		      dex
+    140  f0ce		       d0 cc		      bne	.vll
+    141  f0d0		       a9 00		      lda	#0
+    142  f0d2		       85 86		      sta	p0ao
+    143  f0d4							;overcan
+    144  f0d4		       a9 02		      lda	#2
+    145  f0d6		       85 01		      sta	VBLANK
+    146  f0d8		       a2 1e		      ldx	#30	;30 ovescan scanlines
+    147  f0da				   ovs
+    148  f0da		       85 02		      sta	WSYNC
+    149  f0dc		       ca		      dex		;x--
+    150  f0dd		       d0 fb		      bne	ovs	;jump to ovs if x!=0
+    151  f0df		       a9 00		      lda	#0
+    152  f0e1		       85 01		      sta	VBLANK	;disable blank scanlines
+    153  f0e3							;process input for p0 (up-down-left-right)
+    154  f0e3				   p0up 		;check if p0 is pressed up arrow
+    155  f0e3		       a9 10		      lda	#%00010000	;p0 up
+    156  f0e5		       2c 80 02 	      bit	SWCHA
+    157  f0e8		       d0 06		      bne	p0dw
+    158  f0ea		       e6 81		      inc	p0y	;p0 y pos++
+    159  f0ec		       a9 00		      lda	#0
+    160  f0ee		       85 86		      sta	p0ao
+    161  f0f0				   p0dw 		;p0 down
+    162  f0f0		       a9 20		      lda	#%00100000
+    163  f0f2		       2c 80 02 	      bit	SWCHA
+    164  f0f5		       d0 06		      bne	p0le
+    165  f0f7		       c6 81		      dec	p0y	;p0 y pos--
+    166  f0f9		       a9 00		      lda	#0
+    167  f0fb		       85 86		      sta	p0ao
+    168  f0fd				   p0le 		;p0 left
+    169  f0fd		       a9 40		      lda	#%01000000
+    170  f0ff		       2c 80 02 	      bit	SWCHA
+    171  f102		       d0 06		      bne	p0ri
+    172  f104		       c6 80		      dec	p0x	;p0 x pos--
+    173  f106		       a9 09		      lda	#9
+    174  f108		       85 86		      sta	p0ao
+    175  f10a				   p0ri 		;p0 right
+    176  f10a		       a9 80		      lda	#%10000000
+    177  f10c		       2c 80 02 	      bit	SWCHA
+    178  f10f		       d0 06		      bne	df
+    179  f111		       e6 80		      inc	p0x	;p0 x pos++
+    180  f113		       a9 09		      lda	#9
+    181  f115		       85 86		      sta	p0ao
+    182  f117				   df			;if none action taken by p0
+    183  f117				   up1pos		;update p1 y position
+    184  f117		       a5 88		      lda	p1y	;transfer p1 y pos to a register
+    185  f119		       18		      clc		;clear carry register for comparison
+    186  f11a		       c9 00		      cmp	#0	;check if p1 reached to 0
+    187  f11c		       30 05		      bmi	.resp1pos	;reset p1 y position to top if it reached 0
+    188  f11e		       c6 88		      dec	p1y	;else p1y--
+    189  f120		       4c 26 f1 	      jmp	endpos	;jump over reset
+    190  f123				   .resp1pos		;reset p1 position
+    191  f123		       20 5c f1 	      jsr	rngp1
+    192  f126				   endpos
+    193  f126				   .cp0p1		;collision checks
+    194  f126		       a9 80		      lda	#%10000000	;CXPPMM bit 7 detects p0 and p1 collision
+    195  f128		       24 07		      bit	CXPPMM	;check CXPPMM bit 7
+    196  f12a		       d0 03		      bne	.CP0P1	;jump if collided
+    197  f12c		       4c 32 f1 	      jmp	.cp0pf
+    198  f12f				   .CP0P1		;when p0 collides with p1
+    199  f12f		       20 57 f1 	      jsr	GO	;game over
+    200  f132				   .cp0pf		;when p0 and pf collides
+    201  f132		       a9 80		      lda	#%10000000	;CXP0FB bit 7 detecs collision
+    202  f134		       24 02		      bit	CXP0FB	;check p0 and playfield collision
+    203  f136		       d0 03		      bne	.CP0PF
+    204  f138		       4c 3e f1 	      jmp	.endclch
+    205  f13b				   .CP0PF
+    206  f13b		       20 57 f1 	      jsr	GO	;game over
+    207  f13e				   .endclch		;end collision check
+    208  f13e		       85 2c		      sta	CXCLR	;clear collisions
+    209  f140		       4c 3f f0 	      jmp	dk
+    210  f143				   setx       subroutine		;set object's x positon subroutine
+    211  f143		       85 02		      sta	WSYNC
+    212  f145		       38		      sec		;set carry flag
+    213  f146				   .div 		;division loop -since 6502 opcode doesnt include any division, division is achieved via series of subtractions
+    214  f146		       e9 0f		      sbc	#15	;subtraction takes 2 clock cycles and branching takes 3 clock cycle thus making a total of 5 clock cycle in each
+    215  f148							;subtraction. each CPU clock cycle is equivelent of 3 TIA clock cycles so each division is 15 pixel. to determine
+    216  f148							;p0_x location calculate rough position by dividing by 15 and use remainder to fine tune the exact position
+    217  f148		       b0 fc		      bcs	.div	;jump to div if a<0
+    218  f14a		       49 07		      eor	#7	;exclusive or with %00000111 to fine tune the x position
+    219  f14c					      repeat	4	;HMP0 uses 4 bits %xxxx0000
+    220  f14c		       0a		      asl
+    219  f14c					      repend
+    220  f14d		       0a		      asl
+    219  f14d					      repend
+    220  f14e		       0a		      asl
+    219  f14e					      repend
+    220  f14f		       0a		      asl
+    221  f150					      repend
+    222  f150		       99 20 00 	      sta	HMP0,Y
+    223  f153		       99 10 00 	      sta	RESP0,Y
+    224  f156		       60		      rts
+    225  f157				   GO	      subroutine		;game over subroutine
+    226  f157		       a9 1e		      lda	#30
+    227  f159		       85 09		      sta	COLUBK
+    228  f15b		       60		      rts
+    229  f15c				   rngp1      subroutine		;random number generator for p1 starting position
+    230  f15c		       a5 8d		      lda	rng
+    231  f15e		       0a		      asl
+    232  f15f		       45 8d		      eor	rng
+    233  f161		       0a		      asl
+    234  f162		       45 8d		      eor	rng
+    235  f164		       0a		      asl
+    236  f165		       0a		      asl
+    237  f166		       45 8d		      eor	rng
+    238  f168		       0a		      asl
+    239  f169		       26 8d		      rol	rng	;performs a series of shifts and bit operations
+    240  f16b		       4a		      lsr
+    241  f16c		       4a		      lsr		;divide the value by 4 with 2 right shifts
+    242  f16d		       85 87		      sta	p1x	;save random number on player1 x position
+    243  f16f		       a9 1e		      lda	#30
+    244  f171		       65 87		      adc	p1x	;30+p1x to compensate for left playfield
+    245  f173		       85 87		      sta	p1x	;set new value to the p1x
+    246  f175		       a9 60		      lda	#96
+    247  f177		       85 88		      sta	p1y	;set the y-position to the top of the screen
+    248  f179		       60		      rts
+    249  f17a				   p0_spr		;p0 sprite
+    250  f17a		       00		      .byte.b	#%00000000	;
+    251  f17b		       14		      .byte.b	#%00010100	;   # #
+    252  f17c		       7f		      .byte.b	#%01111111	; #######
+    253  f17d		       3e		      .byte.b	#%00111110	;  #####
+    254  f17e		       1c		      .byte.b	#%00011100	;   ###
+    255  f17f		       1c		      .byte.b	#%00011100	;   ###
+    256  f180		       08		      .byte.b	#%00001000	;    #
+    257  f181		       08		      .byte.b	#%00001000	;    #
+    258  f182		       08		      .byte.b	#%00001000	;    #
+    259  f183				   p0_trn		;p0 turn sprite
+    260  f183		       00		      .byte.b	#%00000000	;
+    261  f184		       08		      .byte.b	#%00001000	;    #
+    262  f185		       3e		      .byte.b	#%00111110	;  #####
+    263  f186		       1c		      .byte.b	#%00011100	;   ###
+    264  f187		       1c		      .byte.b	#%00011100	;   ###
+    265  f188		       1c		      .byte.b	#%00011100	;   ###
+    266  f189		       08		      .byte.b	#%00001000	;    #
+    267  f18a		       08		      .byte.b	#%00001000	;    #
+    268  f18b		       08		      .byte.b	#%00001000	;    #
+    269  f18c				   p1_spr		;p1 sprite
+    270  f18c		       00		      .byte.b	#%00000000	;
+    271  f18d		       08		      .byte.b	#%00001000	;    #
+    272  f18e		       08		      .byte.b	#%00001000	;    #
+    273  f18f		       2a		      .byte.b	#%00101010	;  # # #
+    274  f190		       3e		      .byte.b	#%00111110	;  #####
+    275  f191		       7f		      .byte.b	#%01111111	; #######
+    276  f192		       2a		      .byte.b	#%00101010	;  # # #
+    277  f193		       08		      .byte.b	#%00001000	;    #
+    278  f194		       1c		      .byte.b	#%00011100	;   ###
+    279  f195				   p0_clr		;p0 colour
+    280  f195		       00		      .byte.b	#$00
+    281  f196		       fe		      .byte.b	#$FE
+    282  f197		       0c		      .byte.b	#$0C
+    283  f198		       0e		      .byte.b	#$0E
+    284  f199		       0e		      .byte.b	#$0E
+    285  f19a		       04		      .byte.b	#$04
+    286  f19b		       ba		      .byte.b	#$BA
+    287  f19c		       0e		      .byte.b	#$0E
+    288  f19d		       08		      .byte.b	#$08
+    289  f19e				   p0_tclr		;p0 turn colour
+    290  f19e		       00		      .byte.b	#$00
+    291  f19f		       fe		      .byte.b	#$FE
+    292  f1a0		       0c		      .byte.b	#$0C
+    293  f1a1		       0e		      .byte.b	#$0E
+    294  f1a2		       0e		      .byte.b	#$0E
+    295  f1a3		       04		      .byte.b	#$04
+    296  f1a4		       0e		      .byte.b	#$0E
+    297  f1a5		       0e		      .byte.b	#$0E
+    298  f1a6		       08		      .byte.b	#$08
+    299  f1a7				   p1_clr		;p1 colour
+    300  f1a7		       00		      .byte.b	#$00
+    301  f1a8		       32		      .byte.b	#$32
+    302  f1a9		       32		      .byte.b	#$32
+    303  f1aa		       0e		      .byte.b	#$0E
+    304  f1ab		       40		      .byte.b	#$40
+    305  f1ac		       40		      .byte.b	#$40
+    306  f1ad		       40		      .byte.b	#$40
+    307  f1ae		       40		      .byte.b	#$40
+    308  f1af		       40		      .byte.b	#$40
+    309  fffc					      org	$FFFC
+    310  fffc		       00 f0		      .word.w	res
+    311  fffe		       00 f0		      .word.w	res

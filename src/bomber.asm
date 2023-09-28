@@ -74,6 +74,20 @@ vbl:;vblank loop
     bne vbl
     lda #0
     sta VBLANK ;disable blank scanlines
+    ;scoreboard setup
+    ;clear TIA register before each frame
+    lda #0 
+    sta PF0
+    sta PF1
+    sta PF2
+    sta GRP0
+    sta GRP1
+    sta COLUPF
+    ldx #20
+scl:;scoreboard loop
+    sta WSYNC
+    dex ;x--
+    bne scl
 vl;visible lines
     ;colour palette -> https://en.wikipedia.org/wiki/List_of_video_game_console_palettes
     lda #$84 ;blue
@@ -88,7 +102,7 @@ vl;visible lines
     sta PF1
     lda #0
     sta PF2
-    ldx #96 ;half of visible lines because of 2-line kernel usag
+    ldx #84  ;half of visible lines because of 2-line kernel usag
 .vll:;visible line loop
 .check_p0;check if p0 is ready to render
     txa ;transfer x to a register
@@ -176,6 +190,22 @@ up1pos:;update p1 y position
 .resp1pos:;reset p1 position
     jsr rngp1
 endpos:
+.cp0p1:;collision checks
+    lda #%10000000;CXPPMM bit 7 detects p0 and p1 collision
+    bit CXPPMM ;check CXPPMM bit 7 
+    bne .CP0P1 ;jump if collided
+    jmp .cp0pf
+.CP0P1:;when p0 collides with p1
+    jsr GO ;game over
+.cp0pf:;when p0 and pf collides
+    lda #%10000000;CXP0FB bit 7 detecs collision
+    bit CXP0FB;check p0 and playfield collision
+    bne .CP0PF
+    jmp .endclch
+.CP0PF:
+    jsr GO;game over
+.endclch;end collision check
+    sta CXCLR;clear collisions
     jmp dk
 setx subroutine ;set object's x positon subroutine
     sta WSYNC
@@ -191,6 +221,10 @@ setx subroutine ;set object's x positon subroutine
     repend
     sta HMP0,Y
     sta RESP0,Y
+    rts
+GO subroutine;game over subroutine
+    lda #30
+    sta COLUBK
     rts
 rngp1 subroutine;random number generator for p1 starting position
     lda rng
