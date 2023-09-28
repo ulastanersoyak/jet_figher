@@ -444,7 +444,6 @@
      61  f059		       a9 00		      lda	#0
      62  f05b		       85 01		      sta	VBLANK
      63  f05d		       4c 13 f0 	      jmp	dk
-     64  f060
-     65  fffc					      org	$FFFC
-     66  fffc		       00 f0		      .word.w	res
-     67  fffe		       00 f0		      .word.w	res
+     64  fffc					      org	$FFFC
+     65  fffc		       00 f0		      .word.w	res
+     66  fffe		       00 f0		      .word.w	res
