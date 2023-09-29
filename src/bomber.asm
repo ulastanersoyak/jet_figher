@@ -3,6 +3,9 @@
     include "test/macros/vcs.h"
     seg.u var
     org $80
+    ;6502 processor documentation -> http://www.6502.org/tutorials/6502opcodes.html
+mx byte ;missile x pos
+my byte ;missile y pos
 p0x byte ;player0 x pos
 p0y byte ;player0 y pos
 p0s word ;player0 sprite ptr
@@ -42,6 +45,16 @@ res:;reset
     lda #0
     sta score;score=0
     sta timer;timer=0
+    mac DRM;missile drawing m_acro 
+        lda #%00000000
+        cpx my;compare scanline with missile y pos
+        bne .skmd
+        lda #%00000010;second bit enables m0 display
+        inc my
+.skmd:;skip missile draw
+    sta ENAM0;store value on TIA missile register
+
+    endm
     ;p0
     lda #<p0_spr;set lookup table for p0 sprite
     sta p0s
@@ -78,6 +91,9 @@ dk:;draw kernel
     lda p1x
     ldy #1
     jsr setx ;set player1 horizontal position
+    lda mx;missle x pos
+    ldy #2 
+    jsr setx
     jsr calcdigoff ; calculate scoreboard digits lookup table offset
     sta WSYNC
     sta HMOVE ;apply horizontal movements set by subroutine
@@ -96,7 +112,7 @@ dk:;draw kernel
     lda #$1E
     sta COLUPF
     ldx #dgh;start X counter with 5 (height of digits)
-scrdgtl:
+scrdgtl:;scire digit loop
     ldy tenoffset;get the tens digit offset for the score
     lda digit,Y;load the bit pattern from lookup table
     and #$F0;mask/remove the graphics for the ones digit
@@ -154,6 +170,7 @@ vl;visible lines
     sta PF2
     ldx #84  ;half of visible lines because of 2-line kernel usag
 .vll:;visible line loop
+    DRM;draw missile macro
 .check_p0;check if p0 is ready to render
     txa ;transfer x to a register
     sec ;set the carry flag for subtraction
@@ -226,7 +243,7 @@ p0le:;p0 left
     bit SWCHA
     bne p0ri
     lda p0x
-    cmp #30
+    cmp #32
     bmi p0ri
     dec p0x;p0 x pos--
     lda #9
@@ -234,13 +251,25 @@ p0le:;p0 left
 p0ri:;p0 right
     lda #%10000000
     bit SWCHA
-    bne df
+    bne mish 
     lda p0x
-    cmp #85
-    bpl df
+    cmp #102
+    bpl mish 
     inc p0x;p0 x pos++
     lda #9
     sta p0ao
+mish:;missile shoot
+    lda #%10000000
+    bit INPT4;check button pressed
+    bne df
+    lda p0x
+    clc
+    adc #5
+    sta mx;store mxpos as p0xpos
+    lda p0y
+    clc
+    adc #4
+    sta my;store mypos as p0ypos
 df:;if none action taken by p0
 up1pos:;update p1 y position
     lda p1y ;transfer p1 y pos to a register
@@ -251,17 +280,36 @@ up1pos:;update p1 y position
     jmp endpos ;jump over reset
 .resp1pos:;reset p1 position
     jsr rngp1
-    inc score;score ++
-    inc timer;timer++
+.setdigits
+    sed;set decimal mode for score and timer
+    lda timer
+    clc
+    adc #1
+    sta timer
+    cld
 endpos:
-.cp0p1:;collision checks
+.cp0p1:;p0 p1 collision chck
     lda #%10000000;CXPPMM bit 7 detects p0 and p1 collision
     bit CXPPMM ;check CXPPMM bit 7 
     bne .CP0P1 ;jump if collided
     jsr strclr
-    jmp .endclch
+    jmp .cm0p1
 .CP0P1:;when p0 collides with p1
     jsr GO ;game over
+.cm0p1:;missile 0 p1 collision check
+    lda #%10000000
+    bit CXM0P;m0 p1 collision check register
+    bne .CM0P1
+    jmp .endclch
+.CM0P1;when m0 collides with p1
+    sed ;decimal mode for incrementing the score
+    lda score
+    clc
+    adc #1
+    sta score
+    cld ;disable decimal mode
+    lda #0
+    sta my;make missile disappear after collision
 .endclch;end collision check
     sta CXCLR;clear collisions
     jmp dk

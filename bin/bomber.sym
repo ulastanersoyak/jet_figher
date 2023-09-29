@@ -1,23 +1,27 @@
 --- Symbol List (sorted by symbol)
-0.check_p0               f137                  
-0.check_p1               f14f                  
-0.CP0P1                  f1e9              (R )
-0.cp0p1                  f1dd                  
-0.dp0                    f141              (R )
-0.dp1                    f159              (R )
-0.endclch                f1ec              (R )
+0.check_p0               f14a                  
+0.check_p1               f162                  
+0.CM0P1                  f221              (R )
+0.cm0p1                  f218              (R )
+0.CP0P1                  f215              (R )
+0.cp0p1                  f209                  
+0.dp0                    f154              (R )
+0.dp1                    f16c              (R )
+0.endclch                f22e              (R )
 0.FREE_BYTES             0000                  
-0.resp1pos               f1d6              (R )
-0.vll                    f137              (R )
+0.resp1pos               f1fd              (R )
+0.setdigits              f200                  
+0.vll                    f13e              (R )
 1.CLEAR_STACK            f006              (R )
-3.div                    f1fd              (R )
+2.skmd                   f148              (R )
+4.div                    f23f              (R )
 AUDC0                    0015                  
 AUDC1                    0016                  
 AUDF0                    0017                  
 AUDF1                    0018                  
 AUDV0                    0019                  
 AUDV1                    001a                  
-calcdigoff               f237              (R )
+calcdigoff               f279              (R )
 COLUBK                   0009              (R )
 COLUP0                   0006              (R )
 COLUP1                   0007              (R )
@@ -26,21 +30,21 @@ CTRLPF                   000a              (R )
 CXBLPF                   0006                  
 CXCLR                    002c              (R )
 CXM0FB                   0004                  
-CXM0P                    0000                  
+CXM0P                    0000              (R )
 CXM1FB                   0005                  
 CXM1P                    0001                  
 CXP0FB                   0002                  
 CXP1FB                   0003                  
 CXPPMM                   0007              (R )
-df                       f1ca              (R )
+df                       f1f1              (R )
 dgh                      0005              (R )
-digit                    f258              (R )
+digit                    f29a              (R )
 dk                       f045              (R )
 ENABL                    001f                  
-ENAM0                    001d                  
+ENAM0                    001d              (R )
 ENAM1                    001e                  
-endpos                   f1dd              (R )
-GO                       f20e              (R )
+endpos                   f209              (R )
+GO                       f250              (R )
 GRP0                     001b              (R )
 GRP1                     001c              (R )
 HMBL                     0024                  
@@ -54,39 +58,42 @@ INPT0                    0008
 INPT1                    0009                  
 INPT2                    000a                  
 INPT3                    000b                  
-INPT4                    000c                  
+INPT4                    000c              (R )
 INPT5                    000d                  
 INTIM                    0284                  
+mish                     f1dd              (R )
+mx                       0080              (R )
+my                       0081              (R )
 NUSIZ0                   0004                  
 NUSIZ1                   0005              (R )
-oneoffset                0091              (R )
-ovs                      f175              (R )
-p0_clr                   f2c3              (R )
-p0_spr                   f2a8              (R )
-p0_tclr                  f2cc                  
-p0_trn                   f2b1                  
-p0ao                     0086              (R )
-p0c                      0084              (R )
-p0dw                     f191              (R )
+oneoffset                0093              (R )
+ovs                      f188              (R )
+p0_clr                   f305              (R )
+p0_spr                   f2ea              (R )
+p0_tclr                  f30e                  
+p0_trn                   f2f3                  
+p0ao                     0088              (R )
+p0c                      0086              (R )
+p0dw                     f1a4              (R )
 p0h                      0009              (R )
-p0le                     f1a4              (R )
-p0ri                     f1b7              (R )
-p0s                      0082              (R )
-p0up                     f17e                  
-p0x                      0080              (R )
-p0y                      0081              (R )
-p1_clr                   f2d5              (R )
-p1_spr                   f2ba              (R )
-p1c                      008b              (R )
+p0le                     f1b7              (R )
+p0ri                     f1ca              (R )
+p0s                      0084              (R )
+p0up                     f191                  
+p0x                      0082              (R )
+p0y                      0083              (R )
+p1_clr                   f317              (R )
+p1_spr                   f2fc              (R )
+p1c                      008d              (R )
 p1h                      0009              (R )
-p1s                      0089              (R )
-p1x                      0087              (R )
-p1y                      0088              (R )
+p1s                      008b              (R )
+p1x                      0089              (R )
+p1y                      008a              (R )
 PF0                      000d              (R )
 PF1                      000e              (R )
 PF2                      000f              (R )
-prepscrl                 f239              (R )
-rclr                     0098              (R )
+prepscrl                 f27b              (R )
+rclr                     009a              (R )
 REFP0                    000b                  
 REFP1                    000c                  
 res                      f000              (R )
@@ -97,40 +104,40 @@ RESMP0                   0028
 RESMP1                   0029                  
 RESP0                    0010              (R )
 RESP1                    0011                  
-rng                      008d              (R )
-rngp1                    f219              (R )
+rng                      008f              (R )
+rngp1                    f25b              (R )
 RSYNC                    0003                  
-score                    008e              (R )
-scrdgtl                  f0c6              (R )
-scrsp                    0095              (R )
-setx                     f1fa              (R )
-slp12                    f257              (R )
-strclr                   f1f1              (R )
+score                    0090              (R )
+scrdgtl                  f0cd              (R )
+scrsp                    0097              (R )
+setx                     f23c              (R )
+slp12                    f299              (R )
+strclr                   f233              (R )
 SWACNT                   0281                  
 SWBCNT                   0283                  
 SWCHA                    0280              (R )
 SWCHB                    0282                  
 T1024T                   0297                  
-tclr                     0097              (R )
-temp                     0090              (R )
-tenoffset                0093              (R )
+tclr                     0099              (R )
+temp                     0092              (R )
+tenoffset                0095              (R )
 TIA_BASE_ADDRESS         0000              (R )
 TIA_BASE_READ_ADDRESS    0000              (R )
 TIA_BASE_WRITE_ADDRESS   0000              (R )
 TIM1T                    0294                  
 TIM64T                   0296                  
 TIM8T                    0295                  
-timer                    008f              (R )
+timer                    0091              (R )
 TIMINT                   0285                  
-tmrsp                    0096              (R )
-up1pos                   f1ca                  
+tmrsp                    0098              (R )
+up1pos                   f1f1                  
 VBLANK                   0001              (R )
 VDELBL                   0027                  
 VDELP0                   0025                  
 VDELP1                   0026                  
 VERSION_MACRO            006a                  
 VERSION_VCS              0069                  
-vl                       f11d                  
+vl                       f124                  
 VSYNC                    0000              (R )
 WSYNC                    0002              (R )
 --- End of Symbol List.
