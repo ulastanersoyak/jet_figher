@@ -21,8 +21,10 @@ temp byte;auxiliary variable to store temp values
 oneoffset word;lookup table offset for the score ones digit
 tenoffset word
 scrsp byte;store the sprite bit pattern for the score
-tmrsp byte
-dgh = 5
+tmrsp byte;timer sprite
+dgh = 5;digit height
+tclr byte;terrain colour
+rclr byte;river colour
     seg code 
     org $F000
 res:;reset
@@ -38,8 +40,8 @@ res:;reset
     lda #%11010100
     sta rng
     lda #0
-    sta score                ; Score = 0
-    sta timer                ; timer = 0
+    sta score;score=0
+    sta timer;timer=0
     ;p0
     lda #<p0_spr;set lookup table for p0 sprite
     sta p0s
@@ -89,9 +91,12 @@ dk:;draw kernel
     sta PF2
     sta GRP0
     sta GRP1
+    sta CTRLPF
+    sta COLUBK
+    lda #$1E
     sta COLUPF
     ldx #dgh;start X counter with 5 (height of digits)
-.scoreDigitLoop:
+scrdgtl:
     ldy tenoffset;get the tens digit offset for the score
     lda digit,Y;load the bit pattern from lookup table
     and #$F0;mask/remove the graphics for the ones digit
@@ -124,14 +129,21 @@ dk:;draw kernel
     jsr slp12;waste some cycles
     dex;X--
     sta PF1;update the playfield for the timer display
-    bne .scoreDigitLoop;if dex != 0, then branch to ScoreDigitLoop
+    bne scrdgtl;if dex != 0, then branch to ScoreDigitLoop
     sta WSYNC
+    lda #0
+    sta PF0
+    sta PF1
+    sta PF2
+    repeat 3
+        sta WSYNC
+    repend
 vl;visible lines
     ;colour palette -> https://en.wikipedia.org/wiki/List_of_video_game_console_palettes
-    lda #$84 ;blue
-    sta COLUBK
-    lda #$C2 ;green
-    sta COLUPF
+    lda tclr
+    sta COLUPF               ; set the terrain background color
+    lda rclr
+    sta COLUBK   
     lda #%00000001 ;enable reflection of playfield
     sta CTRLPF ;control playfield register (left most bit decides on reflection or repetition)
     lda #$F0
@@ -193,6 +205,9 @@ p0up:;check if p0 is pressed up arrow
     lda #%00010000;p0 up
     bit SWCHA
     bne p0dw
+    lda p0y
+    cmp #70
+    bpl p0dw
     inc p0y;p0 y pos++
     lda #0
     sta p0ao
@@ -200,6 +215,9 @@ p0dw:;p0 down
     lda #%00100000
     bit SWCHA
     bne p0le
+    lda p0y
+    cmp #5
+    bmi p0le
     dec p0y;p0 y pos--
     lda #0
     sta p0ao
@@ -207,6 +225,9 @@ p0le:;p0 left
     lda #%01000000
     bit SWCHA
     bne p0ri
+    lda p0x
+    cmp #30
+    bmi p0ri
     dec p0x;p0 x pos--
     lda #9
     sta p0ao
@@ -214,6 +235,9 @@ p0ri:;p0 right
     lda #%10000000
     bit SWCHA
     bne df
+    lda p0x
+    cmp #85
+    bpl df
     inc p0x;p0 x pos++
     lda #9
     sta p0ao
@@ -227,24 +251,26 @@ up1pos:;update p1 y position
     jmp endpos ;jump over reset
 .resp1pos:;reset p1 position
     jsr rngp1
+    inc score;score ++
+    inc timer;timer++
 endpos:
 .cp0p1:;collision checks
     lda #%10000000;CXPPMM bit 7 detects p0 and p1 collision
     bit CXPPMM ;check CXPPMM bit 7 
     bne .CP0P1 ;jump if collided
-    jmp .cp0pf
+    jsr strclr
+    jmp .endclch
 .CP0P1:;when p0 collides with p1
     jsr GO ;game over
-.cp0pf:;when p0 and pf collides
-    lda #%10000000;CXP0FB bit 7 detecs collision
-    bit CXP0FB;check p0 and playfield collision
-    bne .CP0PF
-    jmp .endclch
-.CP0PF:
-    jsr GO;game over
 .endclch;end collision check
     sta CXCLR;clear collisions
     jmp dk
+strclr subroutine;set terrain river colour
+    lda #$C2
+    sta tclr;set terrain color to green
+    lda #$84
+    sta rclr;set river color to blue
+    rts
 setx subroutine ;set object's x positon subroutine
     sta WSYNC
     sec ;set carry flag
@@ -261,8 +287,11 @@ setx subroutine ;set object's x positon subroutine
     sta RESP0,Y
     rts
 GO subroutine;game over subroutine
-    lda #30
-    sta COLUBK
+    lda #$30
+    sta tclr;set terrain color to red
+    sta rclr;set river color to red
+    lda #0
+    sta score;Score = 0
     rts
 rngp1 subroutine;random number generator for p1 starting position
     lda rng
@@ -314,97 +343,81 @@ digit:
     .byte %01010101          ; # # # #
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
-
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
-
     .byte %01110111          ; ### ###
     .byte %00010001          ;   #   #
     .byte %01110111          ; ### ###
     .byte %01000100          ; #   #
     .byte %01110111          ; ### ###
-
     .byte %01110111          ; ### ###
     .byte %00010001          ;   #   #
     .byte %00110011          ;  ##  ##
     .byte %00010001          ;   #   #
     .byte %01110111          ; ### ###
-
     .byte %01010101          ; # # # #
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
-
     .byte %01110111          ; ### ###
     .byte %01000100          ; #   #
     .byte %01110111          ; ### ###
     .byte %00010001          ;   #   #
     .byte %01110111          ; ### ###
-
     .byte %01110111          ; ### ###
     .byte %01000100          ; #   #
     .byte %01110111          ; ### ###
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
-
     .byte %01110111          ; ### ###
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
     .byte %00010001          ;   #   #
-
     .byte %01110111          ; ### ###
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
-
     .byte %01110111          ; ### ###
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
     .byte %00010001          ;   #   #
     .byte %01110111          ; ### ###
-
     .byte %00100010          ;  #   #
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
     .byte %01010101          ; # # # #
     .byte %01010101          ; # # # #
-
     .byte %01110111          ; ### ###
     .byte %01010101          ; # # # #
     .byte %01100110          ; ##  ##
     .byte %01010101          ; # # # #
     .byte %01110111          ; ### ###
-
     .byte %01110111          ; ### ###
     .byte %01000100          ; #   #
     .byte %01000100          ; #   #
     .byte %01000100          ; #   #
     .byte %01110111          ; ### ###
-
     .byte %01100110          ; ##  ##
     .byte %01010101          ; # # # #
     .byte %01010101          ; # # # #
     .byte %01010101          ; # # # #
     .byte %01100110          ; ##  ##
-
     .byte %01110111          ; ### ###
     .byte %01000100          ; #   #
     .byte %01110111          ; ### ###
     .byte %01000100          ; #   #
     .byte %01110111          ; ### ###
-
     .byte %01110111          ; ### ###
     .byte %01000100          ; #   #
     .byte %01100110          ; ##  ##
     .byte %01000100          ; #   #
     .byte %01000100          ; #   #
-
 p0_spr:;p0 sprite
     .byte #%00000000         ;
     .byte #%00010100         ;   # #
