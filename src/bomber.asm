@@ -332,7 +332,7 @@ genjetsn subroutine
     sec
     sbc temp
     sta AUDF0 ;pitch
-    lda #1
+    lda #8
     sta AUDC0
     rts
 strclr subroutine;set terrain river colour
