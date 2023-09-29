@@ -53,7 +53,6 @@ res:;reset
         inc my
 .skmd:;skip missile draw
     sta ENAM0;store value on TIA missile register
-
     endm
     ;p0
     lda #<p0_spr;set lookup table for p0 sprite
@@ -82,7 +81,7 @@ dk:;draw kernel
     repend
     lda #0
     sta VSYNC
-    repeat 33
+    repeat 32;CHANGED
         sta WSYNC
     repend
     lda p0x
@@ -95,6 +94,7 @@ dk:;draw kernel
     ldy #2 
     jsr setx
     jsr calcdigoff ; calculate scoreboard digits lookup table offset
+    jsr genjetsn ;configure and enable constant jet sound on background
     sta WSYNC
     sta HMOVE ;apply horizontal movements set by subroutine
     lda #0
@@ -320,6 +320,21 @@ endpos:
 .endclch;end collision check
     sta CXCLR;clear collisions
     jmp dk
+genjetsn subroutine
+    lda #3
+    sta AUDV0
+    lda p0y
+    repeat 3
+        lsr
+    repend
+    sta temp
+    lda #31
+    sec
+    sbc temp
+    sta AUDF0 ;pitch
+    lda #1
+    sta AUDC0
+    rts
 strclr subroutine;set terrain river colour
     lda #$C2
     sta tclr;set terrain color to green
