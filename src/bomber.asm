@@ -90,44 +90,41 @@ dk:;draw kernel
     sta GRP0
     sta GRP1
     sta COLUPF
-    ldx #dgh       ; start X counter with 5 (height of digits)
+    ldx #dgh;start X counter with 5 (height of digits)
 .scoreDigitLoop:
-    ldy tenoffset      ; get the tens digit offset for the score
-    lda digit,Y             ; load the bit pattern from lookup table
-    and #$F0                 ; mask/remove the graphics for the ones digit
-    sta scrsp          ; save the score tens digit pattern in a variable
-    ldy oneoffset      ; get the ones digit offset for the score
-    lda digit,Y             ; load the digit bit pattern from lookup table
-    and #$0F                 ; mask/remove the graphics for the tens digit
-    ora scrsp          ; merge it with the saved tens digit sprite
-    sta scrsp          ; and save it
-    sta WSYNC                ; wait for the end of scanline
-    sta PF1                  ; update the playfield to display the score sprite
-    ldy tenoffset+1    ; get the left digit offset for the timer
-    lda digit,Y             ; load the digit pattern from lookup table
-    and #$F0                 ; mask/remove the graphics for the ones digit
-    sta tmrsp          ; save the timer tens digit pattern in a variable
-    ldy oneoffset+1    ; get the ones digit offset for the timer
-    lda digit,Y             ; load digit pattern from the lookup table
-    and #$0F                 ; mask/remove the graphics for the tens digit
-    ora tmrsp          ; merge with the saved tens digit graphics
-    sta tmrsp          ; and save it
-    jsr slp12        ; wastes some cycles
-    sta PF1                  ; update the playfield for timer display
-    ldy scrsp          ; preload for the next scanline
-    sta WSYNC                ; wait for next scanline
-    sty PF1                  ; update playfield for the score display
+    ldy tenoffset;get the tens digit offset for the score
+    lda digit,Y;load the bit pattern from lookup table
+    and #$F0;mask/remove the graphics for the ones digit
+    sta scrsp;save the score tens digit pattern in a variable
+    ldy oneoffset;get the ones digit offset for the score
+    lda digit,Y;load the digit bit pattern from lookup table
+    and #$0F;mask/remove the graphics for the tens digit
+    ora scrsp;merge it with the saved tens digit sprite
+    sta scrsp;and save it
+    sta WSYNC;wait for the end of scanline
+    sta PF1;update the playfield to display the score sprite
+    ldy tenoffset+1;get the left digit offset for the timer
+    lda digit,Y;load the digit pattern from lookup table
+    and #$F0;mask/remove the graphics for the ones digit
+    sta tmrsp;save the timer tens digit pattern in a variable
+    ldy oneoffset+1;get the ones digit offset for the timer
+    lda digit,Y;load digit pattern from the lookup table
+    and #$0F;mask/remove the graphics for the tens digit
+    ora tmrsp;merge with the saved tens digit graphics
+    sta tmrsp;and save it
+    jsr slp12;wastes some cycles
+    sta PF1;update the playfield for timer display
+    ldy scrsp;preload for the next scanline
+    sta WSYNC;wait for next scanline
+    sty PF1;update playfield for the score display
     inc tenoffset
     inc tenoffset+1
     inc oneoffset
-    inc oneoffset+1    ; increment all digits for the next line of data
-
-    jsr slp12        ; waste some cycles
-
-    dex                      ; X--
-    sta PF1                  ; update the playfield for the timer display
-    bne .scoreDigitLoop      ; if dex != 0, then branch to ScoreDigitLoop
-
+    inc oneoffset+1;increment all digits for the next line of data
+    jsr slp12;waste some cycles
+    dex;X--
+    sta PF1;update the playfield for the timer display
+    bne .scoreDigitLoop;if dex != 0, then branch to ScoreDigitLoop
     sta WSYNC
 vl;visible lines
     ;colour palette -> https://en.wikipedia.org/wiki/List_of_video_game_console_palettes
@@ -288,38 +285,27 @@ rngp1 subroutine;random number generator for p1 starting position
     sta p1y;set the y-position to the top of the screen
     rts
 calcdigoff subroutine
-    ldx #1                   ; X register is the loop counter
-prepscrl            ; this will loop twice, first X=1, and then X=0
-
-    lda score,X              ; load A with timer (X=1) or Score (X=0)
-    and #$0F                 ; remove the tens digit by masking 4 bits 00001111
-    sta temp                 ; save the value of A into Temp
-    asl                      ; shift left (it is now N*2)
-    asl                      ; shift left (it is now N*4)
-    adc temp                 ; add the value saved in Temp (+N)
-    sta oneoffset,X    ; save A in OnesDigitOffset+1 or OnesDigitOffset
-
-    lda score,X              ; load A with timer (X=1) or Score (X=0)
-    and #$F0                 ; remove the ones digit by masking 4 bits 11110000
-    lsr                      ; shift right (it is now N/2)
-    lsr                      ; shift right (it is now N/4)
-    sta temp                 ; save the value of A into Temp
-    lsr                      ; shift right (it is now N/8)
-    lsr                      ; shift right (it is now N/16)
-    adc temp                 ; add the value saved in Temp (N/16+N/4)
-    sta tenoffset,X    ; store A in TensDigitOffset+1 or TensDigitOffset
-
-    dex                      ; X--
-    bpl prepscrl    ; while X >= 0, loop to pass a second time
-
+    ldx #1;X register is the loop counter
+prepscrl;this will loop twice, first X=1, and then X=0
+    lda score,X;load A with timer (X=1) or Score (X=0)
+    and #$0F;remove the tens digit by masking 4 bits 00001111
+    sta temp;save the value of A into Temp
+    asl;shift left (it is now N*2)
+    asl;shift left (it is now N*4)
+    adc temp;add the value saved in Temp (+N)
+    sta oneoffset,X;save A in OnesDigitOffset+1 or OnesDigitOffset
+    lda score,X;load A with timer (X=1) or Score (X=0)
+    and #$F0;remove the ones digit by masking 4 bits 11110000
+    lsr;shift right (it is now N/2)
+    lsr;shift right (it is now N/4)
+    sta temp;save the value of A into Temp
+    lsr;shift right (it is now N/8)
+    lsr;shift right (it is now N/16)
+    adc temp;add the value saved in Temp (N/16+N/4)
+    sta tenoffset,X;store A in TensDigitOffset+1 or TensDigitOffset
+    dex;X--
+    bpl prepscrl; while X >= 0, loop to pass a second time
     rts
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Subroutine to waste 12 cycles
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; jsr takes 6 cycles
-;; rts takes 6 cycles
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 slp12 subroutine
     rts
 digit:
