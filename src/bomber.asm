@@ -19,12 +19,12 @@ p1c word ;player1 colour ptr
 p1h = 9
 rng byte ;generate psedo random numbers for p1y
 score byte;2-digit score stored as BCD
-encnt byte;2-digit timer stored as BCD
+highest byte;2-digit timer stored as BCD
 temp byte;auxiliary variable to store temp values
 oneoffset word;lookup table offset for the score ones digit
 tenoffset word
 scrsp byte;store the sprite bit pattern for the score
-hsp byte;encnt sprite
+hsp byte;highest sprite
 dgh = 5;digit height
 tclr byte;terrain colour
 rclr byte;river colour
@@ -44,7 +44,7 @@ res:;reset
     sta rng
     lda #0
     sta score;score=0
-    sta encnt;timer=0
+    sta highest;timer=0
     mac DRM;missile drawing m_acro 
         lda #%00000000
         cpx my;compare scanline with missile y pos
@@ -124,17 +124,17 @@ scrdgtl:;scire digit loop
     sta scrsp;and save it
     sta WSYNC;wait for the end of scanline
     sta PF1;update the playfield to display the score sprite
-    ldy tenoffset+1;get the left digit offset for the encnt
+    ldy tenoffset+1;get the left digit offset for the highest
     lda digit,Y;load the digit pattern from lookup table
     and #$F0;mask/remove the graphics for the ones digit
-    sta hsp;save the encnt tens digit pattern in a variable
-    ldy oneoffset+1;get the ones digit offset for the encnt
+    sta hsp;save the highest tens digit pattern in a variable
+    ldy oneoffset+1;get the ones digit offset for the highest
     lda digit,Y;load digit pattern from the lookup table
     and #$0F;mask/remove the graphics for the tens digit
     ora hsp;merge with the saved tens digit graphics
     sta hsp;and save it
     jsr slp12;wastes some cycles
-    sta PF1;update the playfield for encnt display
+    sta PF1;update the playfield for highest display
     ldy scrsp;preload for the next scanline
     sta WSYNC;wait for next scanline
     sty PF1;update playfield for the score display
@@ -144,7 +144,7 @@ scrdgtl:;scire digit loop
     inc oneoffset+1;increment all digits for the next line of data
     jsr slp12;waste some cycles
     dex;X--
-    sta PF1;update the playfield for the encnt display
+    sta PF1;update the playfield for the highest display
     bne scrdgtl;if dex != 0, then branch to ScoreDigitLoop
     sta WSYNC
     lda #0
@@ -270,7 +270,7 @@ mish:;missile shoot
     clc
     adc #4
     sta my;store mypos as p0ypos
-df:;if none auuuction taken by p0
+df:;if none action taken by p0
 up1pos:;update p1 y position
     lda p1y ;transfer p1 y pos to a register
     clc ;clear carry register for comparison
@@ -279,14 +279,8 @@ up1pos:;update p1 y position
     dec p1y ;else p1y--
     jmp endpos ;jump over reset
 .resp1pos:;reset p1 position
+    jsr GO
     jsr rngp1 
-.setdigits
-    sed;set decimal mode for score and encnt
-    lda encnt
-    clc
-    adc #1
-    sta encnt
-    cld
 endpos:
 .cp0p1:;p0 p1 collision chck
     lda #%10000000;CXPPMM bit 7 detects p0 and p1 collision
@@ -301,7 +295,6 @@ endpos:
     bit CXM0P;m0 p1 collision check register
     bne .CM0P1
     jmp .endclch
-    jsr rngp1
 .CM0P1;when m0 collides with p1
     sed ;decimal mode for incrementing the score
     lda score
@@ -311,6 +304,19 @@ endpos:
     cld ;disable decimal mode
     lda #0
     sta my;make missile disappear after collision
+    jsr rngp1
+    ldx highest
+    cpx score
+    bcc .sethigh
+    jmp .endclch
+
+.sethigh:
+    sed ;decimal mode for incrementing the score
+    lda highest
+    clc
+    adc #1
+    sta highest
+    cld ;disable decimal mode
 .endclch;end collision check
     sta CXCLR;clear collisions
     jmp dk
@@ -365,14 +371,14 @@ rngp1 subroutine;random number generator for p1 starting position
 calcdigoff subroutine
     ldx #1;X register is the loop counter
 prepscrl;this will loop twice, first X=1, and then X=0
-    lda score,X;load A with encnt (X=1) or Score (X=0)
+    lda score,X;load A with highest (X=1) or Score (X=0)
     and #$0F;remove the tens digit by masking 4 bits 00001111
     sta temp;save the value of A into Temp
     asl;shift left (it is now N*2)
     asl;shift left (it is now N*4)
     adc temp;add the value saved in Temp (+N)
     sta oneoffset,X;save A in OnesDigitOffset+1 or OnesDigitOffset
-    lda score,X;load A with encnt (X=1) or Score (X=0)
+    lda score,X;load A with highest (X=1) or Score (X=0)
     and #$F0;remove the ones digit by masking 4 bits 11110000
     lsr;shift right (it is now N/2)
     lsr;shift right (it is now N/4)
