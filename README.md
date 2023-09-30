@@ -27,4 +27,4 @@ assemble it using provided makefile
 ```
 make
 ```
-after assembling the project, you can use online <a href="https://javatari.org/">javatari</a> emulator. upload the ROM(.bin) to the online emulator to run it.
+after assembling the project, you can use online <a href="https://javatari.org/">javatari</a> emulator. upload the ROM(.bin) to the online emulator to run.
