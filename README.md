@@ -1,6 +1,6 @@
 ![clip](https://github.com/ulastanersoyak/mos_6507/assets/92662728/3d992497-4590-4c54-a75b-9c282e7c6f28)
 
-retro video game for atari 2600 with 6502 8bit assembly. code is heavily documented, might serve educational purpose.
+retro video game for atari 2600 with 6502 8bit assembly.
 ## installation
 ensure you have  git, make and dasm installed on your system.
 option 1:
